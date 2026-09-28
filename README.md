@@ -65,6 +65,49 @@ Com `NODE_ENV=production`, a aplicação automaticamente ativa `trust proxy` e m
 de sessão como `secure` — por isso o HTTPS via Nginx/Let's Encrypt precisa estar na frente
 antes de ativar produção, senão o cookie de sessão não é enviado pelo navegador.
 
+## Quadro do Trello
+
+Ferramenta de apoio da dupla para consultar e atualizar o quadro de tarefas do TCC
+pela linha de comando. **Não faz parte da aplicação** e não é usada em produção —
+o site funciona sem isso.
+
+### Obter as credenciais (uma vez)
+
+1. Acesse <https://trello.com/power-ups/admin> e clique em **New** / **Novo** para
+   criar um Power-Up. Preencha nome (ex.: `TCC CLI`), área de trabalho, e-mail e
+   autor. A **URL de conector Iframe é obrigatória** para o botão Criar liberar —
+   use `https://example.com/`, já que o Power-Up nunca será instalado em um quadro
+   (ele existe só para emitir a API key).
+2. Aberto o Power-Up, no menu da esquerda vá em **Autorização → Autenticação do
+   Trello** (*Trello authentication*, na interface em inglês). **Não** use a tela
+   de OAuth 2.0: é outro fluxo, que pede URL de retorno e não serve aqui.
+3. Gere a API key e copie. Ao lado dela há o link **Token**: clique, confirme em
+   **Allow** / **Permitir** e copie o token gerado.
+4. No `.env` do projeto, preencha:
+
+   ```
+   TRELLO_API_KEY=sua-api-key
+   TRELLO_TOKEN=seu-token
+   ```
+
+O `.env` está no `.gitignore` e nunca vai para o repositório. A API key identifica
+o Power-Up; o token dá acesso à sua conta — trate os dois como senha.
+
+### Comandos
+
+```bash
+node scripts/trello.js quadros                       # lista os quadros e seus IDs
+node scripts/trello.js colunas <quadroId>            # lista as colunas e seus IDs
+node scripts/trello.js cards <quadroId>              # lista os cards agrupados por coluna
+node scripts/trello.js criar <colunaId> "Título" "Descrição opcional"
+node scripts/trello.js mover <cardId> <colunaId>
+node scripts/trello.js comentar <cardId> "Texto do comentário"
+node scripts/trello.js arquivar <cardId>
+```
+
+Comece por `quadros` para descobrir o ID do quadro do TCC; com ele, `cards` mostra
+o quadro inteiro e os IDs necessários para os demais comandos.
+
 ## Estrutura
 
 ```
