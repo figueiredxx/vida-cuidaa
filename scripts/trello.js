@@ -8,11 +8,13 @@
 //   node scripts/trello.js quadros
 //   node scripts/trello.js colunas <quadroId>
 //   node scripts/trello.js cards <quadroId>
-//   node scripts/trello.js criar <colunaId> "<titulo>" ["<descricao>"]
+//   node scripts/trello.js criar <colunaId> "<titulo>" ["<descricao>" | @arquivo.md]
 //   node scripts/trello.js mover <cardId> <colunaId>
-//   node scripts/trello.js comentar <cardId> "<texto>"
+//   node scripts/trello.js comentar <cardId> "<texto>" | @arquivo.md
 //   node scripts/trello.js arquivar <cardId>
 require('dotenv').config();
+
+const fs = require('fs');
 
 const API = 'https://api.trello.com/1';
 
@@ -25,6 +27,16 @@ if (!chave || !token) {
             'Veja como obter em README.md (secao "Quadro do Trello").'
     );
     process.exit(1);
+}
+
+// Texto longo (descricao de card, comentario) e incomodo de passar por argumento
+// no terminal: crase, aspas e quebra de linha atrapalham. Prefixar com @ le de um
+// arquivo, como o curl faz.
+function lerTexto(valor) {
+    if (typeof valor === 'string' && valor.startsWith('@')) {
+        return fs.readFileSync(valor.slice(1), 'utf8');
+    }
+    return valor;
 }
 
 // Toda chamada leva key e token na query string, como a API do Trello exige.
@@ -85,7 +97,7 @@ async function listarCards(quadroId) {
 async function criarCard(colunaId, titulo, descricao) {
     const card = await chamar('/cards', {
         metodo: 'POST',
-        params: { idList: colunaId, name: titulo, desc: descricao || '' },
+        params: { idList: colunaId, name: titulo, desc: lerTexto(descricao) || '' },
     });
     console.log(`Card criado: ${card.id}`);
     console.log(card.url);
@@ -97,7 +109,7 @@ async function moverCard(cardId, colunaId) {
 }
 
 async function comentar(cardId, texto) {
-    await chamar(`/cards/${cardId}/actions/comments`, { metodo: 'POST', params: { text: texto } });
+    await chamar(`/cards/${cardId}/actions/comments`, { metodo: 'POST', params: { text: lerTexto(texto) } });
     console.log(`Comentario adicionado ao card ${cardId}.`);
 }
 
