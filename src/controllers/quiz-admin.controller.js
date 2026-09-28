@@ -45,7 +45,15 @@ function exibirQuestoes(req, res) {
     }
 
     const questoes = quizAdminService.listarQuestoes(quiz.id);
-    res.render('admin/quizzes/questoes', { titulo: `Questões — ${quiz.titulo}`, quiz, questoes, erro: null, questaoEditando: null });
+    const artigos = quizAdminService.listarArtigosParaVincular(quiz.id);
+    res.render('admin/quizzes/questoes', {
+        titulo: `Questões — ${quiz.titulo}`,
+        quiz,
+        questoes,
+        artigos,
+        erro: null,
+        questaoEditando: null,
+    });
 }
 
 function extrairAlternativas(body) {
@@ -67,6 +75,7 @@ function salvarQuestao(req, res) {
         enunciado: req.body.enunciado,
         explicacao: req.body.explicacao,
         alternativas,
+        conteudoId: req.body.conteudoId ? Number(req.body.conteudoId) : null,
     });
 
     if (resultado.erro) {
@@ -75,6 +84,7 @@ function salvarQuestao(req, res) {
             titulo: `Questões — ${quiz.titulo}`,
             quiz,
             questoes,
+            artigos: quizAdminService.listarArtigosParaVincular(quiz.id),
             erro: resultado.erro,
             questaoEditando: null,
         });
@@ -94,7 +104,14 @@ function exibirEdicaoQuestao(req, res) {
     const questoes = quizAdminService.listarQuestoes(quiz.id);
     questaoEditando.alternativas = questoes.find((q) => q.id === questaoEditando.id).alternativas;
 
-    res.render('admin/quizzes/questoes', { titulo: `Questões — ${quiz.titulo}`, quiz, questoes, erro: null, questaoEditando });
+    res.render('admin/quizzes/questoes', {
+        titulo: `Questões — ${quiz.titulo}`,
+        quiz,
+        questoes,
+        artigos: quizAdminService.listarArtigosParaVincular(quiz.id),
+        erro: null,
+        questaoEditando,
+    });
 }
 
 function removerQuestao(req, res) {

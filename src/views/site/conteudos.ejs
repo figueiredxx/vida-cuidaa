@@ -58,7 +58,9 @@
                     <span class="badge-lido" hidden>Lido</span>
                     <a class="cards__titulo" href="/conteudos/<%= item.slug %>"><%= item.titulo %></a>
                     <p><%= item.resumo %></p>
-                    <p class="cards__meta"><%= item.categoria_nome %></p>
+                    <p class="cards__meta">
+                        <a href="/categorias/<%= item.categoria_slug %>"><%= item.categoria_nome %></a>
+                    </p>
                 </li>
             <% }); %>
         </ul>

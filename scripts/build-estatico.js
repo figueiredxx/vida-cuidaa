@@ -11,6 +11,7 @@ const path = require('path');
 const ejs = require('ejs');
 
 const categoriaRepository = require('../src/repositories/categoria.repository');
+const categoriaService = require('../src/services/categoria.service');
 const conteudoRepository = require('../src/repositories/conteudo.repository');
 const glossarioService = require('../src/services/glossario.service');
 const quizRepository = require('../src/repositories/quiz.repository');
@@ -145,6 +146,19 @@ async function gerarCatalogoEDetalhes() {
     }
 }
 
+async function gerarTrilhas() {
+    const categorias = categoriaService.listarTrilhas();
+
+    const htmlIndice = await renderizar('categorias', { titulo: 'Trilhas por categoria', categorias });
+    escreverPagina('categorias', htmlIndice);
+
+    for (const categoria of categorias) {
+        const trilha = categoriaService.buscarTrilha(categoria.slug);
+        const html = await renderizar('categoria', { titulo: trilha.categoria.nome, ...trilha });
+        escreverPagina(`categorias/${categoria.slug}`, html);
+    }
+}
+
 async function gerarGlossario() {
     const dados = glossarioService.listarPorLetra(null);
     const html = await renderizar('glossario', { titulo: 'Glossário', ...dados });
@@ -183,6 +197,7 @@ async function main() {
     await gerarHome();
     await gerarSobre();
     await gerarCatalogoEDetalhes();
+    await gerarTrilhas();
     await gerarGlossario();
     await gerarQuizzes();
     await gerarDuvidas();

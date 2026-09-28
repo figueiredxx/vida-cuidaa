@@ -12,6 +12,7 @@
     <h1><%= conteudo.titulo %></h1>
     <%- include('../partials/badge-faixa', { faixa: conteudo.faixa_etaria }) %>
     <p class="conteudo__meta">
+        <a href="/categorias/<%= conteudo.categoria_slug %>"><%= conteudo.categoria_nome %></a> ·
         Tempo de leitura: <%= tempoLeituraMinutos %> min ·
         Revisado em <%= new Date(conteudo.atualizado_em).toLocaleDateString('pt-BR') %>
     </p>

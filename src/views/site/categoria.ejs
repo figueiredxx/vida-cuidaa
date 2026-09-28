@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<%- include('../partials/head') %>
+</head>
+<body>
+<%- include('../partials/header') %>
+
+<main id="conteudo-principal" class="container">
+    <nav aria-label="Trilha de navegação" class="migalhas">
+        <a href="/categorias">Trilhas</a> &rsaquo; <span aria-current="page"><%= categoria.nome %></span>
+    </nav>
+
+    <h1><%= categoria.nome %></h1>
+    <% if (categoria.descricao) { %>
+        <p><%= categoria.descricao %></p>
+    <% } %>
+
+    <% if (totalArtigos === 0) { %>
+        <p class="estado-vazio">Esta categoria ainda não tem artigos publicados.</p>
+    <% } else { %>
+        <div class="progresso-leitura" id="trilha-progresso" data-total="<%= totalArtigos %>">
+            <p class="progresso-leitura__texto" id="trilha-progresso-texto" aria-live="polite">
+                Carregando seu progresso nesta categoria&hellip;
+            </p>
+            <div class="progresso-leitura__arco" role="progressbar" aria-labelledby="trilha-progresso-texto"
+                 aria-valuemin="0" aria-valuemax="<%= totalArtigos %>" aria-valuenow="0" id="trilha-progresso-barra">
+                <span class="progresso-leitura__preenchimento" id="trilha-progresso-preenchimento" style="width: 0%"></span>
+            </div>
+        </div>
+
+        <h2>Artigos desta categoria</h2>
+        <ol class="trilha-artigos">
+            <% artigos.forEach(function(artigo) { %>
+                <li data-slug="<%= artigo.slug %>">
+                    <%- include('../partials/badge-faixa', { faixa: artigo.faixa_etaria }) %>
+                    <span class="badge-lido" hidden>Lido</span>
+                    <a class="cards__titulo" href="/conteudos/<%= artigo.slug %>"><%= artigo.titulo %></a>
+                    <p><%= artigo.resumo %></p>
+                </li>
+            <% }); %>
+        </ol>
+
+        <% if (quiz) { %>
+            <%# O cadeado e so de interface: quem ja conhece o conteudo ainda alcanca
+                /quiz/:id pela URL. Isso evita travar quem trocou de navegador, ja que
+                a marca de "lido" vive no localStorage. %>
+            <section class="quiz-cadeado" id="trilha-quiz" data-quiz-id="<%= quiz.id %>"
+                     aria-labelledby="titulo-quiz-trilha">
+                <h2 id="titulo-quiz-trilha">Quiz &mdash; <%= quiz.titulo %></h2>
+                <% if (quiz.descricao) { %>
+                    <p><%= quiz.descricao %></p>
+                <% } %>
+                <p class="quiz-cadeado__aviso" id="trilha-quiz-aviso">
+                    Marque como lidos os <%= totalArtigos %> artigos desta categoria para liberar o quiz.
+                </p>
+                <a class="botao-primario quiz-cadeado__acao" id="trilha-quiz-link"
+                   href="/quiz/<%= quiz.id %>" hidden>Fazer o quiz</a>
+            </section>
+        <% } else { %>
+            <p class="estado-vazio">O quiz desta categoria ainda está sendo preparado.</p>
+        <% } %>
+    <% } %>
+</main>
+
+<%- include('../partials/footer') %>
+<script src="/js/acessibilidade.js"></script>
+<script src="/js/trilha-categoria.js"></script>
+</body>
+</html>

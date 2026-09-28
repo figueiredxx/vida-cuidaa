@@ -24,6 +24,10 @@
                             <li><%= alt.correta ? '✓ ' : '' %><%= alt.texto %></li>
                         <% }); %>
                     </ul>
+                    <p class="cards__meta">
+                        Artigo:
+                        <%= (artigos.find(function(a) { return a.id === questao.conteudo_id; }) || {}).titulo || 'nenhum' %>
+                    </p>
                     <a href="/admin/quizzes/<%= quiz.id %>/questoes/<%= questao.id %>/editar">Editar</a>
                     <form method="POST" action="/admin/quizzes/<%= quiz.id %>/questoes/<%= questao.id %>/remover" class="form-inline">
                         <button type="submit">Remover</button>
@@ -56,6 +60,22 @@
         <div class="campo">
             <label for="enunciado">Enunciado</label>
             <textarea id="enunciado" name="enunciado" rows="2" required><%= questaoEditando ? questaoEditando.enunciado : '' %></textarea>
+        </div>
+
+        <div class="campo">
+            <label for="conteudoId">Artigo relacionado (opcional)</label>
+            <select id="conteudoId" name="conteudoId">
+                <option value="">Nenhum — pergunta geral da categoria</option>
+                <% artigos.forEach(function(artigo) { %>
+                    <option value="<%= artigo.id %>"
+                        <%= questaoEditando && questaoEditando.conteudo_id === artigo.id ? 'selected' : '' %>>
+                        <%= artigo.titulo %>
+                    </option>
+                <% }); %>
+            </select>
+            <% if (artigos.length === 0) { %>
+                <p class="cards__meta">Este quiz não está ligado a uma categoria com artigos publicados.</p>
+            <% } %>
         </div>
 
         <div class="campo">

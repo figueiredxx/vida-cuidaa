@@ -15,6 +15,10 @@ function buscarPorId(id) {
     return db.prepare('SELECT * FROM quiz WHERE id = ?').get(id);
 }
 
+function buscarPorCategoria(categoriaId) {
+    return db.prepare('SELECT * FROM quiz WHERE categoria_id = ? ORDER BY id LIMIT 1').get(categoriaId);
+}
+
 function criar({ categoriaId, titulo, descricao }) {
     const info = db
         .prepare('INSERT INTO quiz (categoria_id, titulo, descricao) VALUES (?, ?, ?)')
@@ -53,15 +57,16 @@ function contarQuestoesPorQuiz(quizId) {
     return total;
 }
 
-function criarQuestao(quizId, { enunciado, explicacao, ordem }) {
+function criarQuestao(quizId, { enunciado, explicacao, ordem, conteudoId }) {
     const info = db
-        .prepare('INSERT INTO questao (quiz_id, enunciado, explicacao, ordem) VALUES (?, ?, ?, ?)')
-        .run(quizId, enunciado, explicacao, ordem);
+        .prepare('INSERT INTO questao (quiz_id, conteudo_id, enunciado, explicacao, ordem) VALUES (?, ?, ?, ?, ?)')
+        .run(quizId, conteudoId || null, enunciado, explicacao, ordem);
     return info.lastInsertRowid;
 }
 
-function atualizarQuestao(id, { enunciado, explicacao, ordem }) {
-    db.prepare('UPDATE questao SET enunciado = ?, explicacao = ?, ordem = ? WHERE id = ?').run(
+function atualizarQuestao(id, { enunciado, explicacao, ordem, conteudoId }) {
+    db.prepare('UPDATE questao SET conteudo_id = ?, enunciado = ?, explicacao = ?, ordem = ? WHERE id = ?').run(
+        conteudoId || null,
         enunciado,
         explicacao,
         ordem,
@@ -97,7 +102,17 @@ function buscarQuestoesParaPlayer(quizId) {
 }
 
 function buscarGabarito(quizId) {
-    const questoes = db.prepare('SELECT id, enunciado, explicacao FROM questao WHERE quiz_id = ?').all(quizId);
+    // LEFT JOIN porque o vinculo com o artigo e opcional: questao antiga ou
+    // pergunta geral da categoria nao aponta para nenhum conteudo.
+    const questoes = db
+        .prepare(
+            `SELECT questao.id, questao.enunciado, questao.explicacao,
+                    conteudo.titulo AS artigo_titulo, conteudo.slug AS artigo_slug
+             FROM questao
+             LEFT JOIN conteudo ON conteudo.id = questao.conteudo_id
+             WHERE questao.quiz_id = ?`
+        )
+        .all(quizId);
     const corretaStmt = db.prepare('SELECT id, texto FROM alternativa WHERE questao_id = ? AND correta = 1');
     return questoes.map((questao) => ({
         ...questao,
@@ -117,6 +132,7 @@ function registrarTentativa(quizId, usuarioId, pontuacao, total) {
 module.exports = {
     listarTodos,
     buscarPorId,
+    buscarPorCategoria,
     criar,
     atualizar,
     remover,

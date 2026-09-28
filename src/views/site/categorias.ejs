@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<%- include('../partials/head') %>
+</head>
+<body>
+<%- include('../partials/header') %>
+
+<main id="conteudo-principal" class="container">
+    <h1>Trilhas por categoria</h1>
+    <p>Leia todos os artigos de uma categoria para liberar o quiz dela.</p>
+
+    <ul class="cards trilhas" id="lista-trilhas">
+        <% categorias.forEach(function(categoria) { %>
+            <li data-slugs-artigos="<%= categoria.slugsArtigos.join(',') %>">
+                <a class="cards__titulo" href="/categorias/<%= categoria.slug %>"><%= categoria.nome %></a>
+                <% if (categoria.descricao) { %>
+                    <p><%= categoria.descricao %></p>
+                <% } %>
+                <p class="cards__meta trilhas__progresso" data-total="<%= categoria.totalArtigos %>">
+                    <%= categoria.totalArtigos %> <%= categoria.totalArtigos === 1 ? 'artigo' : 'artigos' %>
+                </p>
+            </li>
+        <% }); %>
+    </ul>
+</main>
+
+<%- include('../partials/footer') %>
+<script src="/js/acessibilidade.js"></script>
+<script src="/js/trilha-categoria.js"></script>
+</body>
+</html>

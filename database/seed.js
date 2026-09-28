@@ -300,6 +300,408 @@ function seedQuizzes() {
     console.log(`Quizzes inseridos: ${QUIZZES.length}`);
 }
 
+// Um quiz por categoria, liberado na trilha depois que o visitante le todos os
+// artigos daquela categoria. Cada questao aponta o artigo de onde saiu
+// (conteudoSlug), para o resultado indicar o que revisar em caso de erro.
+const QUIZZES_POR_CATEGORIA = [
+    {
+        categoriaSlug: 'consentimento-relacionamentos',
+        titulo: 'Consentimento e relacionamentos',
+        descricao: 'Quatro perguntas sobre os artigos desta categoria.',
+        questoes: [
+            {
+                conteudoSlug: 'o-que-e-consentimento',
+                enunciado: 'Depois de dizer "sim", a pessoa pode mudar de ideia durante a relação?',
+                explicacao:
+                    'O consentimento é reversível: pode ser retirado a qualquer momento, inclusive durante a própria atividade, e isso deve ser respeitado imediatamente.',
+                alternativas: [
+                    { texto: 'Sim, a qualquer momento, inclusive durante a atividade', correta: true },
+                    { texto: 'Não, o "sim" vale até o fim da relação', correta: false },
+                    { texto: 'Só se houver um motivo considerado justo', correta: false },
+                    { texto: 'Só em relacionamentos que ainda não são sérios', correta: false },
+                ],
+            },
+            {
+                conteudoSlug: 'o-que-e-consentimento',
+                enunciado: 'O silêncio ou a ausência de reação podem ser entendidos como consentimento?',
+                explicacao:
+                    'Nunca. Silêncio, ausência de reação, sono, inconsciência ou efeito de substâncias jamais podem ser interpretados como concordância.',
+                alternativas: [
+                    { texto: 'Nunca; consentimento precisa ser uma permissão clara e voluntária', correta: true },
+                    { texto: 'Sim, quem não diz não está concordando', correta: false },
+                    { texto: 'Sim, quando o casal já tem intimidade', correta: false },
+                    { texto: 'Depende de quanto tempo dura o relacionamento', correta: false },
+                ],
+            },
+            {
+                conteudoSlug: 'sinais-de-um-relacionamento-saudavel',
+                enunciado: 'Qual atitude demonstra confiança em um relacionamento saudável?',
+                explicacao:
+                    'Confiança é cada pessoa manter sua individualidade, sem vigilância constante de celular, localização ou explicações sobre cada momento do dia.',
+                alternativas: [
+                    { texto: 'Cada um mantém sua individualidade, sem vigiar celular ou localização', correta: true },
+                    { texto: 'Compartilhar todas as senhas para provar que não há segredos', correta: false },
+                    { texto: 'Checar a localização do outro várias vezes ao dia', correta: false },
+                    { texto: 'Cobrar explicações sobre cada pessoa com quem o outro conversa', correta: false },
+                ],
+            },
+            {
+                conteudoSlug: 'como-identificar-relacionamentos-abusivos',
+                enunciado: 'Controle de roupas e amizades, ciúme constante e isolamento da família são o quê?',
+                explicacao:
+                    'São sinais de alerta de violência no relacionamento. Costumam ser apresentados como "prova de amor" ou preocupação, mas são formas de controle.',
+                alternativas: [
+                    { texto: 'Sinais de alerta de um relacionamento abusivo', correta: true },
+                    { texto: 'Prova de que a pessoa ama muito', correta: false },
+                    { texto: 'Uma fase normal de todo namoro', correta: false },
+                    { texto: 'Cuidado excessivo, mas inofensivo', correta: false },
+                ],
+            },
+        ],
+    },
+    {
+        categoriaSlug: 'planejamento-familiar',
+        titulo: 'Planejamento familiar',
+        descricao: 'Quatro perguntas sobre os artigos desta categoria.',
+        questoes: [
+            {
+                conteudoSlug: 'metodos-contraceptivos',
+                enunciado: 'O que o Ministério da Saúde chama de "dupla proteção"?',
+                explicacao:
+                    'Dupla proteção é associar um método contraceptivo de sua escolha ao preservativo, porque só o preservativo protege também contra ISTs.',
+                alternativas: [
+                    { texto: 'Associar um método contraceptivo de sua escolha ao preservativo', correta: true },
+                    { texto: 'Usar duas pílulas anticoncepcionais por dia', correta: false },
+                    { texto: 'Usar duas camisinhas ao mesmo tempo', correta: false },
+                    { texto: 'Combinar DIU de cobre com DIU hormonal', correta: false },
+                ],
+            },
+            {
+                conteudoSlug: 'metodos-contraceptivos',
+                enunciado: 'Qual método tem a vantagem exclusiva de proteger também contra ISTs?',
+                explicacao:
+                    'Apenas os preservativos (externo e interno) protegem ao mesmo tempo contra gravidez não planejada e contra ISTs. Eles são distribuídos gratuitamente nas unidades de saúde.',
+                alternativas: [
+                    { texto: 'Os preservativos masculino/externo e feminino/interno', correta: true },
+                    { texto: 'O implante subdérmico', correta: false },
+                    { texto: 'O injetável trimestral', correta: false },
+                    { texto: 'A minipílula', correta: false },
+                ],
+            },
+            {
+                conteudoSlug: 'diu-o-que-e-e-como-funciona',
+                enunciado: 'Como o DIU de cobre evita a gravidez?',
+                explicacao:
+                    'O DIU de cobre não tem hormônios: o cobre provoca uma reação local no útero que danifica os espermatozoides e dificulta sua movimentação, impedindo a fecundação.',
+                alternativas: [
+                    { texto: 'Sem hormônios: o cobre danifica os espermatozoides e impede a fecundação', correta: true },
+                    { texto: 'Liberando estrogênio na corrente sanguínea', correta: false },
+                    { texto: 'Bloqueando fisicamente a entrada do útero como uma barreira', correta: false },
+                    { texto: 'Interrompendo a produção de óvulos de forma definitiva', correta: false },
+                ],
+            },
+            {
+                conteudoSlug: 'diu-o-que-e-e-como-funciona',
+                enunciado: 'Quem nunca engravidou pode usar DIU?',
+                explicacao:
+                    'Pode. O DIU é indicado para mulheres em qualquer momento da vida reprodutiva, inclusive quem nunca engravidou, e tem eficácia acima de 99%.',
+                alternativas: [
+                    { texto: 'Sim, pode ser usado em qualquer momento da vida reprodutiva', correta: true },
+                    { texto: 'Não, é indicado apenas após o primeiro filho', correta: false },
+                    { texto: 'Somente depois dos 35 anos', correta: false },
+                    { texto: 'Somente logo após um parto', correta: false },
+                ],
+            },
+        ],
+    },
+    {
+        categoriaSlug: 'prevencao-ists',
+        titulo: 'Prevenção e ISTs',
+        descricao: 'Cinco perguntas sobre os artigos desta categoria.',
+        questoes: [
+            {
+                conteudoSlug: 'o-que-sao-ists',
+                enunciado: 'Por que desde 2016 o Ministério da Saúde usa "IST" no lugar de "DST"?',
+                explicacao:
+                    'Porque a pessoa pode estar infectada e transmitir o agente causador sem apresentar nenhum sintoma — "infecção" é mais preciso do que "doença" nesses casos.',
+                alternativas: [
+                    { texto: 'Porque é possível estar infectado e transmitir mesmo sem sintomas', correta: true },
+                    { texto: 'Porque as doenças mudaram de nome em todo o mundo', correta: false },
+                    { texto: 'Porque hoje todas elas têm cura', correta: false },
+                    { texto: 'Porque deixaram de ser transmitidas por via sexual', correta: false },
+                ],
+            },
+            {
+                conteudoSlug: 'o-que-sao-ists',
+                enunciado: 'Além da via sexual, como HIV, sífilis e hepatite B também podem ser transmitidos?',
+                explicacao:
+                    'Pela transmissão vertical: da pessoa gestante para o bebê durante a gestação, o parto ou a amamentação.',
+                alternativas: [
+                    {
+                        texto: 'De forma vertical, da gestante para o bebê na gestação, parto ou amamentação',
+                        correta: true,
+                    },
+                    { texto: 'Pelo compartilhamento de talheres e copos', correta: false },
+                    { texto: 'Pelo assento do vaso sanitário', correta: false },
+                    { texto: 'Por picada de inseto', correta: false },
+                ],
+            },
+            {
+                conteudoSlug: 'uso-correto-do-preservativo',
+                enunciado: 'Que tipo de lubrificante pode ser usado junto com a camisinha?',
+                explicacao:
+                    'Somente lubrificantes à base de água ou de silicone. Vaselina, óleos e cremes danificam a borracha e podem romper o preservativo.',
+                alternativas: [
+                    { texto: 'Apenas os à base de água ou de silicone', correta: true },
+                    { texto: 'Vaselina', correta: false },
+                    { texto: 'Óleo de cozinha ou óleo corporal', correta: false },
+                    { texto: 'Creme hidratante comum', correta: false },
+                ],
+            },
+            {
+                conteudoSlug: 'uso-correto-do-preservativo',
+                enunciado: 'Em que momento a camisinha masculina deve ser colocada?',
+                explicacao:
+                    'Com o pênis já ereto e antes de qualquer contato genital, porque o líquido pré-ejaculatório também pode transmitir ISTs.',
+                alternativas: [
+                    { texto: 'Com o pênis ereto e antes de qualquer contato genital', correta: true },
+                    { texto: 'Apenas pouco antes da ejaculação', correta: false },
+                    { texto: 'Depois do início da penetração', correta: false },
+                    { texto: 'Tanto faz, desde que seja durante a relação', correta: false },
+                ],
+            },
+            {
+                conteudoSlug: 'hiv-transmissao-tratamento-e-prep',
+                enunciado: 'O que significa "Indetectável = Intransmissível" (I=I)?',
+                explicacao:
+                    'O tratamento antirretroviral tomado corretamente reduz o vírus no sangue a níveis indetectáveis, o que preserva a saúde da pessoa e elimina praticamente o risco de transmissão sexual.',
+                alternativas: [
+                    {
+                        texto: 'Com o tratamento correto, o vírus fica indetectável e praticamente não é transmitido',
+                        correta: true,
+                    },
+                    { texto: 'Que a pessoa está curada do HIV', correta: false },
+                    { texto: 'Que o exame de HIV deu resultado errado', correta: false },
+                    { texto: 'Que não é mais preciso tomar o medicamento', correta: false },
+                ],
+            },
+        ],
+    },
+    {
+        categoriaSlug: 'puberdade-adolescencia',
+        titulo: 'Puberdade e adolescência',
+        descricao: 'Quatro perguntas sobre os artigos desta categoria.',
+        questoes: [
+            {
+                conteudoSlug: 'mudancas-do-corpo-na-puberdade',
+                enunciado:
+                    'Segundo a Sociedade Brasileira de Pediatria, em corpos com ovários a puberdade costuma começar entre que idades?',
+                explicacao:
+                    'Entre 8 e 13 anos em corpos com ovários, e entre 9 e 14 anos em corpos com testículos. Cada corpo segue o próprio ritmo.',
+                alternativas: [
+                    { texto: 'Entre 8 e 13 anos', correta: true },
+                    { texto: 'Entre 5 e 7 anos', correta: false },
+                    { texto: 'Entre 14 e 18 anos', correta: false },
+                    { texto: 'Somente depois dos 15 anos', correta: false },
+                ],
+            },
+            {
+                conteudoSlug: 'mudancas-do-corpo-na-puberdade',
+                enunciado: 'Em corpos que menstruam, qual costuma ser o primeiro sinal da puberdade?',
+                explicacao:
+                    'A sequência mais comum começa pelo crescimento das mamas (telarca), seguido dos pelos pubianos e axilares, do estirão de crescimento e, por último, da primeira menstruação.',
+                alternativas: [
+                    { texto: 'O crescimento das mamas, chamado de telarca', correta: true },
+                    { texto: 'A primeira menstruação', correta: false },
+                    { texto: 'O estirão de crescimento em altura', correta: false },
+                    { texto: 'O surgimento de acne', correta: false },
+                ],
+            },
+            {
+                conteudoSlug: 'primeira-menstruacao-o-que-esperar',
+                enunciado: 'Como se chama a primeira menstruação?',
+                explicacao:
+                    'Menarca. Segundo a Sociedade Brasileira de Pediatria, costuma acontecer por volta dos 12 anos e meio, sendo normal entre 9 e 16 anos.',
+                alternativas: [
+                    { texto: 'Menarca', correta: true },
+                    { texto: 'Telarca', correta: false },
+                    { texto: 'Menopausa', correta: false },
+                    { texto: 'Ovulação', correta: false },
+                ],
+            },
+            {
+                conteudoSlug: 'primeira-menstruacao-o-que-esperar',
+                enunciado: 'Ciclos irregulares nos dois primeiros anos após a menarca indicam o quê?',
+                explicacao:
+                    'São bastante comuns nesse período, porque o sistema hormonal ainda está amadurecendo. Costumam se ajustar sozinhos, sem precisar de tratamento.',
+                alternativas: [
+                    { texto: 'Nada de errado: são comuns porque o sistema hormonal ainda amadurece', correta: true },
+                    { texto: 'Que existe um problema hormonal grave', correta: false },
+                    { texto: 'Que é preciso iniciar tratamento imediatamente', correta: false },
+                    { texto: 'Que a pessoa não poderá engravidar no futuro', correta: false },
+                ],
+            },
+        ],
+    },
+    {
+        categoriaSlug: 'saude-reprodutiva',
+        titulo: 'Saúde reprodutiva',
+        descricao: 'Quatro perguntas sobre os artigos desta categoria.',
+        questoes: [
+            {
+                conteudoSlug: 'pre-natal-por-que-e-importante',
+                enunciado: 'Quantas consultas de pré-natal o Ministério da Saúde recomenda no mínimo?',
+                explicacao:
+                    'No mínimo seis consultas: idealmente uma no primeiro trimestre, duas no segundo e três no terceiro.',
+                alternativas: [
+                    { texto: 'Seis', correta: true },
+                    { texto: 'Duas', correta: false },
+                    { texto: 'Doze', correta: false },
+                    { texto: 'Uma por gestação', correta: false },
+                ],
+            },
+            {
+                conteudoSlug: 'pre-natal-por-que-e-importante',
+                enunciado: 'A partir da 36ª semana de gestação, com que frequência costumam ser as consultas?',
+                explicacao:
+                    'Mensais até a 28ª semana, quinzenais entre a 28ª e a 36ª, e semanais da 36ª semana até o parto — o monitoramento se intensifica na reta final.',
+                alternativas: [
+                    { texto: 'Semanais', correta: true },
+                    { texto: 'Mensais', correta: false },
+                    { texto: 'Quinzenais', correta: false },
+                    { texto: 'Somente se houver sintomas', correta: false },
+                ],
+            },
+            {
+                conteudoSlug: 'ciclo-menstrual-como-funciona',
+                enunciado: 'A contagem do ciclo menstrual começa em qual dia?',
+                explicacao:
+                    'O ciclo é contado do primeiro dia de sangramento (dia 1) até o dia anterior ao início da próxima menstruação.',
+                alternativas: [
+                    { texto: 'No primeiro dia do sangramento', correta: true },
+                    { texto: 'No último dia do sangramento', correta: false },
+                    { texto: 'No dia da ovulação', correta: false },
+                    { texto: 'Sempre no primeiro dia de cada mês', correta: false },
+                ],
+            },
+            {
+                conteudoSlug: 'ciclo-menstrual-como-funciona',
+                enunciado: 'Qual hormônio desencadeia a ovulação?',
+                explicacao:
+                    'O pico do hormônio luteinizante (LH), que ocorre quando o estrogênio atinge seu nível máximo, desencadeia a liberação do óvulo maduro.',
+                alternativas: [
+                    { texto: 'O hormônio luteinizante (LH), no chamado pico de LH', correta: true },
+                    { texto: 'A progesterona', correta: false },
+                    { texto: 'O hormônio folículo-estimulante (FSH)', correta: false },
+                    { texto: 'A insulina', correta: false },
+                ],
+            },
+        ],
+    },
+    {
+        categoriaSlug: 'saude-sexual',
+        titulo: 'Saúde sexual',
+        descricao: 'Quatro perguntas sobre os artigos desta categoria.',
+        questoes: [
+            {
+                conteudoSlug: 'testagem-para-ists-quando-e-como-fazer',
+                enunciado: 'Em quanto tempo o teste rápido oferecido pelo SUS dá o resultado?',
+                explicacao:
+                    'Em até 30 minutos, a partir de uma amostra de sangue colhida na ponta do dedo — o que agiliza o encaminhamento para tratamento quando necessário.',
+                alternativas: [
+                    { texto: 'Em até 30 minutos', correta: true },
+                    { texto: 'Em até 7 dias', correta: false },
+                    { texto: 'Em até 30 dias', correta: false },
+                    { texto: 'Somente na consulta seguinte', correta: false },
+                ],
+            },
+            {
+                conteudoSlug: 'testagem-para-ists-quando-e-como-fazer',
+                enunciado: 'É preciso ter sintomas para procurar a testagem de ISTs no SUS?',
+                explicacao:
+                    'Não. Qualquer pessoa com vida sexual ativa pode buscar a testagem como cuidado preventivo de rotina, de forma gratuita e sigilosa, na UBS ou no CTA.',
+                alternativas: [
+                    { texto: 'Não; qualquer pessoa com vida sexual ativa pode buscar a testagem', correta: true },
+                    { texto: 'Sim, só com sintomas visíveis', correta: false },
+                    { texto: 'Sim, é preciso encaminhamento médico', correta: false },
+                    { texto: 'Só quem tem mais de 40 anos', correta: false },
+                ],
+            },
+            {
+                conteudoSlug: 'saude-sexual-e-bem-estar-emocional',
+                enunciado: 'Como a Organização Mundial da Saúde (OMS) define saúde sexual?',
+                explicacao:
+                    'Como um estado de bem-estar físico, emocional, mental e social relacionado à sexualidade — e não meramente a ausência de doença, disfunção ou enfermidade.',
+                alternativas: [
+                    {
+                        texto: 'Bem-estar físico, emocional, mental e social, e não apenas ausência de doença',
+                        correta: true,
+                    },
+                    { texto: 'A simples ausência de ISTs', correta: false },
+                    { texto: 'O uso correto de métodos contraceptivos', correta: false },
+                    { texto: 'A realização de exames periódicos', correta: false },
+                ],
+            },
+            {
+                conteudoSlug: 'saude-sexual-e-bem-estar-emocional',
+                enunciado: 'Segundo a OMS/OPAS, como devem ser as experiências sexuais em uma vida sexual saudável?',
+                explicacao:
+                    'Prazerosas e seguras, livres de coerção, discriminação e violência — o que exige uma abordagem positiva e respeitosa da sexualidade.',
+                alternativas: [
+                    { texto: 'Prazerosas e seguras, livres de coerção, discriminação e violência', correta: true },
+                    { texto: 'Restritas ao objetivo de ter filhos', correta: false },
+                    { texto: 'Guiadas apenas pela vontade de um dos parceiros', correta: false },
+                    { texto: 'Sempre precedidas de exames laboratoriais', correta: false },
+                ],
+            },
+        ],
+    },
+];
+
+function seedQuizzesPorCategoria() {
+    const categoriaIdPorSlug = Object.fromEntries(
+        db.prepare('SELECT id, slug FROM categoria').all().map((c) => [c.slug, c.id])
+    );
+    const conteudoIdPorSlug = Object.fromEntries(
+        db.prepare('SELECT id, slug FROM conteudo').all().map((c) => [c.slug, c.id])
+    );
+
+    const jaTemQuiz = db.prepare('SELECT 1 FROM quiz WHERE categoria_id = ?');
+    const inserirQuiz = db.prepare('INSERT INTO quiz (categoria_id, titulo, descricao) VALUES (?, ?, ?)');
+    const inserirQuestao = db.prepare(
+        'INSERT INTO questao (quiz_id, conteudo_id, enunciado, explicacao, ordem) VALUES (?, ?, ?, ?, ?)'
+    );
+    const inserirAlternativa = db.prepare('INSERT INTO alternativa (questao_id, texto, correta) VALUES (?, ?, ?)');
+
+    let inseridos = 0;
+
+    const transacao = db.transaction((quizzes) => {
+        quizzes.forEach((quiz) => {
+            const categoriaId = categoriaIdPorSlug[quiz.categoriaSlug];
+            // Idempotente por categoria: se a categoria ja tem quiz, nao duplica.
+            if (!categoriaId || jaTemQuiz.get(categoriaId)) return;
+
+            const quizId = inserirQuiz.run(categoriaId, quiz.titulo, quiz.descricao).lastInsertRowid;
+            quiz.questoes.forEach((questao, indice) => {
+                const questaoId = inserirQuestao.run(
+                    quizId,
+                    conteudoIdPorSlug[questao.conteudoSlug] || null,
+                    questao.enunciado,
+                    questao.explicacao,
+                    indice + 1
+                ).lastInsertRowid;
+                questao.alternativas.forEach((alternativa) => {
+                    inserirAlternativa.run(questaoId, alternativa.texto, alternativa.correta ? 1 : 0);
+                });
+            });
+            inseridos += 1;
+        });
+    });
+
+    transacao(QUIZZES_POR_CATEGORIA);
+    console.log(`Quizzes por categoria inseridos: ${inseridos}`);
+}
+
 const GLOSSARIO = [
     { termo: 'IST', definicao: 'Infecção Sexualmente Transmissível, transmitida principalmente por contato sexual.' },
     { termo: 'Preservativo', definicao: 'Método de barreira que previne ISTs e gravidez não planejada.' },
@@ -348,6 +750,7 @@ function seedAdmin() {
 seedCategorias();
 seedConteudos();
 seedQuizzes();
+seedQuizzesPorCategoria();
 seedGlossario();
 seedAdmin();
 

@@ -97,6 +97,18 @@
                     li.appendChild(explicacao);
                 }
 
+                // So em quem errou: o caminho de volta para o artigo que responde a pergunta.
+                if (!item.acertou && item.artigo) {
+                    const revisar = document.createElement('p');
+                    revisar.className = 'quiz-revisar';
+                    revisar.appendChild(document.createTextNode('Reveja: '));
+                    const link = document.createElement('a');
+                    link.href = '/conteudos/' + item.artigo.slug;
+                    link.textContent = item.artigo.titulo;
+                    revisar.appendChild(link);
+                    li.appendChild(revisar);
+                }
+
                 detalhesEl.appendChild(li);
             });
 

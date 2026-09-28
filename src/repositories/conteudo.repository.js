@@ -95,6 +95,18 @@ function listarRelacionados(categoriaId, idExcluir, limite) {
         .all(categoriaId, idExcluir, limite);
 }
 
+function listarPublicadosPorCategoria(categoriaId) {
+    // Ordem crescente: a trilha e lida do artigo mais antigo para o mais novo.
+    return db
+        .prepare(
+            `SELECT id, titulo, slug, resumo, faixa_etaria
+             FROM conteudo
+             WHERE categoria_id = ? AND publicado = 1
+             ORDER BY criado_em, id`
+        )
+        .all(categoriaId);
+}
+
 function contarTotal() {
     const { total } = db.prepare('SELECT COUNT(*) AS total FROM conteudo').get();
     return total;
@@ -176,6 +188,7 @@ module.exports = {
     buscarPorSlugPublicado,
     incrementarVisualizacoes,
     listarRelacionados,
+    listarPublicadosPorCategoria,
     contarTotal,
     contarPorPublicado,
     listarTodosAdmin,

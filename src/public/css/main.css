@@ -877,6 +877,105 @@ select:focus-visible {
     border-top: 1px solid var(--cor-borda);
 }
 
+/* ---------- Trilha por categoria ---------- */
+
+.migalhas {
+    font-size: 0.85rem;
+    color: var(--cor-sal-texto);
+    margin-bottom: 0.5rem;
+}
+
+.trilhas__item--concluida {
+    border-color: var(--cor-sucesso);
+}
+
+.trilha-artigos {
+    list-style: none;
+    display: grid;
+    gap: var(--espaco-medio);
+    margin: var(--espaco-medio) 0 var(--espaco-grande);
+    padding: 0;
+    counter-reset: artigo;
+}
+
+.trilha-artigos li {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    padding: var(--espaco-medio);
+    padding-left: 3rem;
+    position: relative;
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio-card);
+    background: var(--cor-fundo-card);
+}
+
+/* Numero da etapa: reforca que a categoria e uma trilha com ordem de leitura. */
+.trilha-artigos li::before {
+    counter-increment: artigo;
+    content: counter(artigo);
+    position: absolute;
+    left: var(--espaco-medio);
+    top: var(--espaco-medio);
+    width: 1.6rem;
+    height: 1.6rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--cor-tinta);
+    background: var(--cor-borda);
+}
+
+.trilha-artigos__item--lido::before {
+    color: #fff;
+    background: var(--cor-sucesso);
+}
+
+.quiz-cadeado {
+    padding: var(--espaco-medio);
+    border: 2px dashed var(--cor-borda);
+    border-radius: var(--raio-card);
+    background: var(--cor-fundo-card);
+}
+
+.quiz-cadeado--liberado {
+    border-style: solid;
+    border-color: var(--cor-sucesso);
+}
+
+.quiz-cadeado h2 {
+    margin-bottom: 0.4rem;
+}
+
+.quiz-cadeado__aviso {
+    color: var(--cor-sal-texto);
+    font-size: 0.9rem;
+    margin-bottom: var(--espaco-medio);
+}
+
+.quiz-cadeado--liberado .quiz-cadeado__aviso {
+    color: var(--cor-tinta);
+    font-weight: 600;
+}
+
+.quiz-cadeado__acao {
+    display: inline-block;
+    text-decoration: none;
+}
+
+/* Link do resultado do quiz para o artigo de onde a pergunta saiu. */
+.quiz-revisar {
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.quiz-revisar a {
+    color: var(--cor-calor-texto);
+}
+
 /* ===========================================================
    Painel administrativo — mesma paleta e tipografia, sem o
    motivo de arco: ferramenta de trabalho, densa e funcional.

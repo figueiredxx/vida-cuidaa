@@ -46,10 +46,12 @@ CREATE TABLE IF NOT EXISTS quiz (
 CREATE TABLE IF NOT EXISTS questao (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     quiz_id INTEGER NOT NULL,
+    conteudo_id INTEGER,
     enunciado TEXT NOT NULL,
     explicacao TEXT,
     ordem INTEGER NOT NULL DEFAULT 0,
-    FOREIGN KEY (quiz_id) REFERENCES quiz(id) ON DELETE CASCADE
+    FOREIGN KEY (quiz_id) REFERENCES quiz(id) ON DELETE CASCADE,
+    FOREIGN KEY (conteudo_id) REFERENCES conteudo(id)
 );
 
 CREATE TABLE IF NOT EXISTS alternativa (
@@ -99,4 +101,5 @@ CREATE INDEX IF NOT EXISTS idx_conteudo_categoria_publicado ON conteudo(categori
 CREATE INDEX IF NOT EXISTS idx_conteudo_faixa_publicado ON conteudo(faixa_etaria, publicado);
 CREATE INDEX IF NOT EXISTS idx_questao_quiz ON questao(quiz_id);
 CREATE INDEX IF NOT EXISTS idx_alternativa_questao ON alternativa(questao_id);
+CREATE INDEX IF NOT EXISTS idx_questao_conteudo ON questao(conteudo_id);
 CREATE INDEX IF NOT EXISTS idx_duvida_status ON duvida(status);

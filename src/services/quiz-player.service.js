@@ -23,6 +23,7 @@ function corrigir(quizId, respostas, usuarioId) {
             explicacao: questao.explicacao,
             acertou: Boolean(acertou),
             alternativaCorretaTexto: questao.alternativaCorreta ? questao.alternativaCorreta.texto : null,
+            artigo: questao.artigo_slug ? { titulo: questao.artigo_titulo, slug: questao.artigo_slug } : null,
         };
     });
 
