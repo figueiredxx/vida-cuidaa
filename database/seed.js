@@ -39,8 +39,9 @@ function seedCategorias() {
 }
 
 function seedConteudos() {
-    if (!tabelaVazia('conteudo')) return;
-
+    // Aditivo por slug: insere o que ainda nao existe, sem tocar no que ja esta
+    // gravado. Assim um artigo novo chega tambem em quem ja rodou o seed antes,
+    // e edicoes feitas pelo admin nao sao sobrescritas.
     const categoriaIdPorSlug = Object.fromEntries(
         db.prepare('SELECT id, slug FROM categoria').all().map((c) => [c.slug, c.id])
     );
@@ -172,14 +173,28 @@ function seedConteudos() {
             fontes: "Ministério da Saúde; UNAIDS Brasil",
             faixaEtaria: 'adulto',
         },
+        {
+            categoriaSlug: 'planejamento-familiar',
+            titulo: 'Mitos e verdades sobre a pílula',
+            slug: 'mitos-e-verdades-sobre-a-pilula',
+            resumo: 'O que as fontes oficiais dizem sobre os boatos mais comuns a respeito da pílula anticoncepcional: ganho de peso, pausas, fertilidade, antibióticos e proteção contra ISTs.',
+            corpoHtml: '<p>A pílula anticoncepcional é um dos métodos contraceptivos mais usados no Brasil e, talvez por isso, também um dos que mais acumulam informações desencontradas. Separar o que as fontes oficiais dizem do que circula na conversa do dia a dia ajuda a usar o método com segurança — e a fazer perguntas melhores na consulta.</p><h2>"A pílula engorda"</h2><p>As pílulas atuais têm doses hormonais muito menores do que as das primeiras gerações, e os estudos disponíveis não confirmam ganho de peso significativo causado pelo método. Algumas pessoas relatam retenção de líquido ou inchaço nos primeiros meses, o que costuma diminuir com a adaptação. Se o incômodo persistir, o caminho é conversar com o profissional de saúde sobre trocar a formulação — não abandonar o método por conta própria.</p><h2>"É preciso dar uma pausa de tempos em tempos"</h2><p>Não existe recomendação de interromper periodicamente o uso para o corpo "descansar". A pausa sem orientação não traz benefício comprovado e cria janelas de desproteção, aumentando a chance de gravidez não planejada. A necessidade de interromper ou trocar o método é avaliada caso a caso, em consulta.</p><h2>"Quem usa pílula por muitos anos fica infértil"</h2><p>A pílula não causa infertilidade. Depois da interrupção, a ovulação costuma voltar já nos primeiros ciclos, embora possa levar alguns meses até o ciclo se regularizar — o que varia de pessoa para pessoa. Dificuldade para engravidar após parar o método normalmente tem outra causa, que merece investigação própria.</p><h2>"Qualquer antibiótico corta o efeito"</h2><p>Esse é um dos mitos mais difundidos. Os antibióticos de uso comum, como a amoxicilina, não reduzem a eficácia da pílula. A interação relevante está restrita a alguns medicamentos específicos — a rifampicina e a rifabutina (usadas no tratamento de tuberculose e outras infecções), além de certos anticonvulsivantes e antirretrovirais. Por isso vale sempre informar ao profissional que você usa contraceptivo hormonal antes de iniciar qualquer tratamento.</p><h2>"Quem toma pílula está protegido contra IST"</h2><p>Falso, e esse é o mito com maior potencial de dano. A pílula age apenas sobre a possibilidade de gravidez: ela não oferece nenhuma barreira contra HIV, sífilis, gonorreia, clamídia, HPV ou hepatites. Proteção contra infecções sexualmente transmissíveis vem do preservativo, externo ou interno. É exatamente por isso que o Ministério da Saúde recomenda a <strong>dupla proteção</strong>: o método contraceptivo de sua escolha associado ao preservativo.</p><h2>"Esqueci um comprimido, perdi a proteção do mês inteiro"</h2><p>Não é assim que funciona. O impacto de um esquecimento depende de quantos comprimidos foram esquecidos, de qual semana da cartela e do tipo de pílula. A bula de cada apresentação traz a conduta específica, e a orientação geral é usar preservativo como reforço nos dias seguintes até retomar o uso regular. Em caso de dúvida, procure a unidade de saúde: existe também a contracepção de emergência, disponível gratuitamente no SUS.</p><h2>"A pílula do dia seguinte é abortiva"</h2><p>A contracepção de emergência age principalmente atrasando ou impedindo a ovulação, ou seja, atua antes de haver fecundação. Ela não interrompe uma gravidez já estabelecida. É um recurso para situações eventuais — falha do preservativo, esquecimento, violência sexual — e não substitui um método contraceptivo de uso regular, por ter eficácia menor.</p><h2>Quem não deve usar a pílula combinada</h2><p>A pílula não é indicada para todo mundo. Fumantes com 35 anos ou mais, pessoas com histórico de trombose ou embolia, hipertensão não controlada, enxaqueca com aura e algumas doenças hepáticas ou cardiovasculares têm contraindicação ao componente estrogênico — e nesses casos existem alternativas, como a minipílula, o implante ou o DIU. Só a avaliação de um profissional de saúde, considerando seu histórico, define o método adequado.</p><p>Se alguma dessas informações contraria o que você ouviu, leve a dúvida para a consulta na unidade básica de saúde: o planejamento familiar é um direito garantido pelo SUS, e a escolha do método é sempre individual.</p>',
+            fontes: 'Ministério da Saúde; FEBRASGO',
+            faixaEtaria: 'adulto',
+        },
     ];
 
     const inserir = db.prepare(
         `INSERT INTO conteudo (categoria_id, titulo, slug, resumo, corpo_html, fontes, faixa_etaria, publicado)
          VALUES (?, ?, ?, ?, ?, ?, ?, 1)`
     );
+    const jaExiste = db.prepare('SELECT 1 FROM conteudo WHERE slug = ?');
+    let inseridos = 0;
+
     const transacao = db.transaction((conteudos) => {
-        conteudos.forEach((c) =>
+        conteudos.forEach((c) => {
+            if (jaExiste.get(c.slug)) return;
+            inseridos += 1;
             inserir.run(
                 categoriaIdPorSlug[c.categoriaSlug],
                 c.titulo,
@@ -188,11 +203,11 @@ function seedConteudos() {
                 c.corpoHtml,
                 c.fontes,
                 c.faixaEtaria
-            )
-        );
+            );
+        });
     });
     transacao(CONTEUDOS);
-    console.log(`Conteudos inseridos: ${CONTEUDOS.length}`);
+    console.log(`Conteudos inseridos: ${inseridos}`);
 }
 
 // Quiz único de demonstração (o site tem um só quiz, não uma lista deles —
@@ -362,7 +377,7 @@ const QUIZZES_POR_CATEGORIA = [
     {
         categoriaSlug: 'planejamento-familiar',
         titulo: 'Planejamento familiar',
-        descricao: 'Quatro perguntas sobre os artigos desta categoria.',
+        descricao: 'Cinco perguntas sobre os artigos desta categoria.',
         questoes: [
             {
                 conteudoSlug: 'metodos-contraceptivos',
@@ -398,6 +413,18 @@ const QUIZZES_POR_CATEGORIA = [
                     { texto: 'Liberando estrogênio na corrente sanguínea', correta: false },
                     { texto: 'Bloqueando fisicamente a entrada do útero como uma barreira', correta: false },
                     { texto: 'Interrompendo a produção de óvulos de forma definitiva', correta: false },
+                ],
+            },
+            {
+                conteudoSlug: 'mitos-e-verdades-sobre-a-pilula',
+                enunciado: 'Quem toma pílula anticoncepcional está protegido contra ISTs?',
+                explicacao:
+                    'Não. A pílula age apenas sobre a possibilidade de gravidez e não oferece barreira contra HIV, sífilis, HPV ou hepatites. Proteção contra IST vem do preservativo — por isso a recomendação de dupla proteção.',
+                alternativas: [
+                    { texto: 'Não; a pílula não protege contra IST, só o preservativo protege', correta: true },
+                    { texto: 'Sim, protege contra todas as ISTs', correta: false },
+                    { texto: 'Sim, desde que tomada sem nenhum esquecimento', correta: false },
+                    { texto: 'Protege apenas contra o HIV', correta: false },
                 ],
             },
             {
@@ -666,40 +693,57 @@ function seedQuizzesPorCategoria() {
         db.prepare('SELECT id, slug FROM conteudo').all().map((c) => [c.slug, c.id])
     );
 
-    const jaTemQuiz = db.prepare('SELECT 1 FROM quiz WHERE categoria_id = ?');
+    const buscarQuizDaCategoria = db.prepare('SELECT id FROM quiz WHERE categoria_id = ?');
+    const jaTemQuestao = db.prepare('SELECT 1 FROM questao WHERE quiz_id = ? AND enunciado = ?');
+    const contarQuestoes = db.prepare('SELECT COUNT(*) AS total FROM questao WHERE quiz_id = ?');
     const inserirQuiz = db.prepare('INSERT INTO quiz (categoria_id, titulo, descricao) VALUES (?, ?, ?)');
     const inserirQuestao = db.prepare(
         'INSERT INTO questao (quiz_id, conteudo_id, enunciado, explicacao, ordem) VALUES (?, ?, ?, ?, ?)'
     );
     const inserirAlternativa = db.prepare('INSERT INTO alternativa (questao_id, texto, correta) VALUES (?, ?, ?)');
 
-    let inseridos = 0;
+    let quizzesCriados = 0;
+    let questoesInseridas = 0;
 
     const transacao = db.transaction((quizzes) => {
         quizzes.forEach((quiz) => {
             const categoriaId = categoriaIdPorSlug[quiz.categoriaSlug];
-            // Idempotente por categoria: se a categoria ja tem quiz, nao duplica.
-            if (!categoriaId || jaTemQuiz.get(categoriaId)) return;
+            if (!categoriaId) return;
 
-            const quizId = inserirQuiz.run(categoriaId, quiz.titulo, quiz.descricao).lastInsertRowid;
-            quiz.questoes.forEach((questao, indice) => {
+            // Aditivo: reaproveita o quiz que a categoria ja tiver, em vez de pular a
+            // categoria inteira. Assim uma questao nova (de um artigo novo, por exemplo)
+            // chega em quem ja rodou o seed antes.
+            const existente = buscarQuizDaCategoria.get(categoriaId);
+            let quizId;
+            if (existente) {
+                quizId = existente.id;
+            } else {
+                quizId = inserirQuiz.run(categoriaId, quiz.titulo, quiz.descricao).lastInsertRowid;
+                quizzesCriados += 1;
+            }
+
+            quiz.questoes.forEach((questao) => {
+                // O enunciado identifica a questao: se ja existe neste quiz, nao duplica.
+                if (jaTemQuestao.get(quizId, questao.enunciado)) return;
+
+                const ordem = contarQuestoes.get(quizId).total + 1;
                 const questaoId = inserirQuestao.run(
                     quizId,
                     conteudoIdPorSlug[questao.conteudoSlug] || null,
                     questao.enunciado,
                     questao.explicacao,
-                    indice + 1
+                    ordem
                 ).lastInsertRowid;
                 questao.alternativas.forEach((alternativa) => {
                     inserirAlternativa.run(questaoId, alternativa.texto, alternativa.correta ? 1 : 0);
                 });
+                questoesInseridas += 1;
             });
-            inseridos += 1;
         });
     });
 
     transacao(QUIZZES_POR_CATEGORIA);
-    console.log(`Quizzes por categoria inseridos: ${inseridos}`);
+    console.log(`Quizzes por categoria criados: ${quizzesCriados}; questoes inseridas: ${questoesInseridas}`);
 }
 
 const GLOSSARIO = [
