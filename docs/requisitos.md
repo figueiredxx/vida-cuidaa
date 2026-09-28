@@ -27,6 +27,8 @@ Convenção: `RF` = requisito funcional, `RNF` = requisito não funcional.
 | RF14 | Toda página exibe o aviso "este conteúdo é educativo e não substitui consulta com profissional de saúde" | Sprint 6 (`54370ba`) | `views/partials/footer.ejs`, incluído em todo layout | Ver rodapé de qualquer página; conferido também no build estático (`scripts/build-estatico.js#injetarAvisoEstatico`) |
 | RF15 | Visitante ajusta tamanho de fonte (3 níveis) e ativa alto contraste, preferência persistida entre sessões | Sprint 1/6 (`3882f7c`, `54370ba`) | `barra-acessibilidade.ejs`, `public/js/acessibilidade.js` (`localStorage`) | Ativar alto contraste, recarregar a página — deve continuar ativo |
 | RF16 | Vitrine estática (somente leitura) do catálogo é publicada automaticamente no GitHub Pages a cada push em `master` | `35c0109`, `1bc9510` | `.github/workflows/deploy-pages.yml`, `scripts/build-estatico.js` | Ver Actions do repositório após push em `master` |
+| RF17 | Visitante percorre uma trilha por categoria: os artigos publicados daquela categoria em ordem de leitura, com progresso, e o quiz da categoria liberado somente depois que todos forem lidos | Sprint 7 (`c1cd49c`) | `categoria.controller.js` → `categoria.service.js`; `views/site/categoria.ejs` e `categorias.ejs`; `public/js/trilha-categoria.js` (reusa a chave `progresso-leitura-lidos` do `localStorage`) | Acessar `/categorias/prevencao-ists`, ler os 3 artigos e voltar — o cadeado do quiz some. Ver `tests/categoria.service.test.js` |
+| RF18 | Questão de quiz pode apontar o artigo de origem; no resultado, a questão errada exibe "Reveja: <artigo>" com link para o conteúdo | Sprint 7 (`c1cd49c`) | `schema.sql` (`questao.conteudo_id`), `quiz.repository.js#buscarGabarito`, `quiz-player.service.js#corrigir`, `public/js/quiz.js`; migração idempotente em `database/migrar.js` (`npm run migrar`), necessária porque `schema.sql` usa `CREATE TABLE IF NOT EXISTS` e não altera tabela existente | Errar uma questão em `/quiz/4` e conferir o link; ver `tests/quiz-player.service.test.js` e `tests/quiz-admin.service.test.js` |
 
 ## Requisitos não funcionais
 
@@ -58,6 +60,15 @@ usuário final — nenhum desses itens existe no código, por decisão registrad
 - Sessão de admin usa `MemoryStore` do Express (não sobrevive a restart do processo em
   produção). Fase de deploy prevê `connect-sqlite3` para persistir sessão — ainda não
   integrado.
+- **A numeração de requisitos deste documento não coincide com a usada no quadro do
+  Trello e no Documento de Requisitos formal.** Aqui os funcionais vão até RF18 e os
+  não funcionais até RNF13, e não existe a categoria `RN` (regras de negócio). O quadro
+  cita RF19, RNF14 e RN01/RN08/RN09/RN10, que não têm correspondente aqui — e alguns IDs
+  batem em requisitos diferentes (o card da trilha cita RF14/RF15, que neste documento
+  são o aviso do rodapé e os controles de acessibilidade). Como este documento existe
+  justamente para provar a rastreabilidade entre o combinado e o programado, é preciso
+  eleger uma numeração oficial e alinhar a outra antes da entrega.
+
 - Rate limit hoje é só por sessão (`rate-limit.middleware.js`), aplicado apenas em
   `POST /duvidas`. `POST /admin/login` não tem proteção contra força bruta. Fase de
   deploy prevê `express-rate-limit` — ainda não integrado.
