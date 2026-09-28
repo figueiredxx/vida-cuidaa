@@ -123,7 +123,14 @@ src/
   public/{css,js,img}/
 database/{schema.sql,seed.js,database.sqlite}
 deploy/{plataforma.service,nginx.conf}
-docs/roteiro-demonstracao.md
+docs/
+  der.md                      -- diagrama entidade-relacionamento (Mermaid)
+  requisitos.md               -- rastreabilidade RF/RNF -> commit -> arquivo
+  testes.md                   -- estrategia de testes
+  governanca.md
+  pdca.md
+  roteiro-demonstracao.md
+  bpmn/{fluxo-visitante,fluxo-admin}.md
 ```
 
 Ver `CLAUDE.md` para stack, convenções e regras do projeto.
