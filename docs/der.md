@@ -139,11 +139,11 @@ erDiagram
 
 | Relacionamento | Cardinalidade | Justificativa |
 |---|---|---|
-| `categoria` → `conteudo` | 1 : N | `conteudo.categoria_id` é `NOT NULL`: todo artigo pertence a exatamente uma categoria, o que sustenta a trilha por categoria (RF17). |
+| `categoria` → `conteudo` | 1 : N | `conteudo.categoria_id` é `NOT NULL`: todo artigo pertence a exatamente uma categoria, o que sustenta a trilha por categoria (RF01 e RF14). |
 | `categoria` → `quiz` | 0..1 : N | `quiz.categoria_id` é **anulável** por causa do quiz geral, que atravessa temas e não pertence a nenhuma categoria. |
-| `conteudo` → `questao` | 0..1 : N | `questao.conteudo_id` é **anulável**: a pergunta pode citar o artigo de origem (e aí o resultado mostra "Reveja: …", RF18) ou ser uma pergunta geral da categoria. |
+| `conteudo` → `questao` | 0..1 : N | `questao.conteudo_id` é **anulável**: a pergunta pode citar o artigo de origem (e aí o resultado mostra "Reveja: …" — recurso da Sprint 7, sem RF próprio na especificação) ou ser uma pergunta geral da categoria. |
 | `quiz` → `questao` | 1 : N | `ON DELETE CASCADE` — apagar um quiz apaga suas questões, que não fazem sentido sozinhas. |
-| `questao` → `alternativa` | 1 : N | `ON DELETE CASCADE`, pelo mesmo motivo. A coluna `correta` vive só aqui e nunca é enviada ao navegador antes da resposta (RF07). |
+| `questao` → `alternativa` | 1 : N | `ON DELETE CASCADE`, pelo mesmo motivo. A coluna `correta` vive só aqui e nunca é enviada ao navegador antes da resposta (RF08). |
 | `quiz` → `tentativa_quiz` | 1 : N | Cada tentativa registra pontuação e total de um quiz. |
 | `usuario` → `tentativa_quiz` | 0..1 : N | `usuario_id` é **anulável**: o site é usado sem login, então a maioria das tentativas é anônima. |
 | `duvida` → `resposta_duvida` | 1 : 0..1 | `duvida_id` é `UNIQUE`: uma dúvida recebe no máximo uma resposta oficial. `ON DELETE CASCADE`. |
@@ -154,7 +154,7 @@ erDiagram
 Estas não são esquecimento de modelagem; são requisitos:
 
 - **`duvida` não tem nenhuma FK para `usuario`, nem coluna de IP, e-mail ou nome.**
-  O canal de dúvidas é anônimo por projeto (RNF08). O vínculo com `usuario` existe
+  O canal de dúvidas é anônimo por projeto (RNF21 e RN11). O vínculo com `usuario` existe
   apenas do lado da resposta, para saber qual administrador respondeu.
 - **`glossario` é uma tabela isolada, sem relacionamento.** É um verbete independente,
   sem ligação com categoria ou conteúdo — simplicidade deliberada.
@@ -174,7 +174,7 @@ Estas não são esquecimento de modelagem; são requisitos:
   coluna é o que o Ministério publicou, a outra é o que a plataforma afirma.
 
 Vale registrar também que **nenhuma tabela armazena dado de saúde de indivíduo**
-(RNF09). `tentativa_quiz` guarda apenas acertos e total, sem as respostas
+(RNF21). `tentativa_quiz` guarda apenas acertos e total, sem as respostas
 individuais e, na prática, sem identificação de quem respondeu.
 
 ## Manutenção

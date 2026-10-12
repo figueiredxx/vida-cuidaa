@@ -1,4 +1,4 @@
-// Cobre o requisito RF11: limite de tentativas por sessão em uma janela de tempo.
+// Cobre o requisito RNF24: limite de tentativas por sessão em uma janela de tempo.
 // Não precisa de banco: o middleware só depende de req.session.
 const { test } = require('node:test');
 const assert = require('node:assert/strict');

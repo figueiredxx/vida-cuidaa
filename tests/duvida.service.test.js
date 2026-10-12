@@ -1,4 +1,4 @@
-// Cobre os requisitos RF09/RF10 e RNF08: a dúvida é anônima e passa por um
+// Cobre os requisitos RF17 e RNF21: a dúvida é anônima e passa por um
 // filtro de conteúdo impróprio antes de ser aceita.
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
@@ -38,7 +38,7 @@ test('aceita dúvida válida e retorna o id gerado', () => {
     assert.ok(resultado.id);
 });
 
-test('RNF08: a dúvida gravada não guarda nenhum dado que identifique quem perguntou', () => {
+test('RNF21: a dúvida gravada não guarda nenhum dado que identifique quem perguntou', () => {
     const resultado = duvidaService.enviarDuvida('Preciso tomar a pílula todo santo dia no mesmo horário?');
     const linha = db.prepare('SELECT * FROM duvida WHERE id = ?').get(resultado.id);
     const colunas = Object.keys(linha).sort();

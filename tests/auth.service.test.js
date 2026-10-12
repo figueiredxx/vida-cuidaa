@@ -1,4 +1,4 @@
-// Cobre os requisitos RF04 e RNF03: login por e-mail/senha com bcrypt,
+// Cobre os requisitos RF20 e RNF23: login por e-mail/senha com bcrypt,
 // e o hash da senha nunca deve sair do service para quem chamou.
 const { test, before } = require('node:test');
 const assert = require('node:assert/strict');

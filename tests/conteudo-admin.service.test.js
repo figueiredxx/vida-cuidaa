@@ -1,4 +1,4 @@
-// Cobre os requisitos RF03/RF06: fontes obrigatórias, sanitização de HTML e
+// Cobre os requisitos RF03 e RNF25: fontes obrigatórias, sanitização de HTML e
 // slug único mesmo quando dois conteúdos têm o mesmo título.
 const { test, before } = require('node:test');
 const assert = require('node:assert/strict');

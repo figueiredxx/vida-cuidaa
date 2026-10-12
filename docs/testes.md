@@ -47,14 +47,14 @@ Saída esperada (resumo): `24 tests`, `24 pass`, `0 fail`.
 
 | Arquivo | Característica ISO/IEC 25010 | O que garante |
 |---|---|---|
-| `quiz-player.service.test.js` | **Segurança (confidencialidade)** + **Funcionalidade (correção)** | A alternativa correta nunca é enviada ao navegador antes da resposta (RF07); a pontuação é calculada certo em acerto/erro/questão em branco; a tentativa é registrada mesmo para visitante anônimo |
-| `duvida.service.test.js` | **Segurança (privacidade)** + **Funcionalidade** | Validações de tamanho/conteúdo bloqueado funcionam (RF10); e o teste mais importante do arquivo — a linha gravada no banco **não tem nenhuma coluna capaz de identificar quem perguntou** (RNF08), testado inspecionando as colunas reais da tabela |
+| `quiz-player.service.test.js` | **Segurança (confidencialidade)** + **Funcionalidade (correção)** | A alternativa correta nunca é enviada ao navegador antes da resposta (RF08); a pontuação é calculada certo em acerto/erro/questão em branco; a tentativa é registrada mesmo para visitante anônimo |
+| `duvida.service.test.js` | **Segurança (privacidade)** + **Funcionalidade** | Validações de tamanho/conteúdo bloqueado funcionam (RF17); e o teste mais importante do arquivo — a linha gravada no banco **não tem nenhuma coluna capaz de identificar quem perguntou** (RNF21), testado inspecionando as colunas reais da tabela |
 | `auth.service.test.js` | **Segurança (autenticação, confidencialidade)** | Login falha para e-mail/senha incorretos; quando autentica, o hash bcrypt nunca sai do service |
 | `auth.middleware.test.js` | **Segurança (controle de acesso)** | Rota admin redireciona sem sessão; papel fora da lista permitida recebe 403 |
-| `conteudo-admin.service.test.js` | **Segurança (integridade)** + **Funcionalidade** | `<script>` e outras tags não permitidas são removidas do corpo do conteúdo antes de gravar (RF06); dois conteúdos com o mesmo título geram slugs distintos (evita colisão de URL) |
-| `rate-limit.middleware.test.js` | **Confiabilidade (tolerância a falhas/abuso)** | O limite de tentativas por sessão realmente bloqueia depois do Nº configurado e libera depois que a janela de tempo expira (RF11) |
-| `categoria.service.test.js` | **Funcionalidade (correção)** | A trilha lista só os artigos **publicados** daquela categoria, na ordem de leitura (mais antigo primeiro), e devolve o quiz correto — ou `null` quando a categoria ainda não tem quiz (RF17) |
-| `quiz-admin.service.test.js` | **Funcionalidade (integridade referencial)** | O vínculo questão→artigo é gravado e trocado corretamente na edição, e o admin só pode vincular artigos **da categoria daquele quiz**, nunca de outro assunto (RF18) |
+| `conteudo-admin.service.test.js` | **Segurança (integridade)** + **Funcionalidade** | `<script>` e outras tags não permitidas são removidas do corpo do conteúdo antes de gravar (RNF25); dois conteúdos com o mesmo título geram slugs distintos (evita colisão de URL) |
+| `rate-limit.middleware.test.js` | **Confiabilidade (tolerância a falhas/abuso)** | O limite de tentativas por sessão realmente bloqueia depois do Nº configurado e libera depois que a janela de tempo expira (RNF24) |
+| `categoria.service.test.js` | **Funcionalidade (correção)** | A trilha lista só os artigos **publicados** daquela categoria, na ordem de leitura (mais antigo primeiro), e devolve o quiz correto — ou `null` quando a categoria ainda não tem quiz (RF01 e RF14) |
+| `quiz-admin.service.test.js` | **Funcionalidade (integridade referencial)** | O vínculo questão→artigo é gravado e trocado corretamente na edição, e o admin só pode vincular artigos **da categoria daquele quiz**, nunca de outro assunto — recurso da Sprint 7, sem RF próprio |
 
 ## O que fica fora do automatizado (verificação manual, por decisão de escopo)
 

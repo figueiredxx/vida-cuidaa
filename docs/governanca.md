@@ -55,7 +55,7 @@ provam à banca que o sistema entrega o que promete).
 | Meta | Indicador | Como medir hoje |
 |---|---|---|
 | Educar sobre saúde sexual/reprodutiva com fonte confiável | % de conteúdos com campo `fontes` preenchido | 100% — é `NOT NULL` no schema, impossível salvar sem (RF03) |
-| Canal de dúvida acessível sem barreira de identificação | % de dúvidas enviadas sem qualquer dado identificável gravado | 100% por construção de schema (RNF08), não por auditoria manual |
+| Canal de dúvida acessível sem barreira de identificação | % de dúvidas enviadas sem qualquer dado identificável gravado | 100% por construção de schema (RNF21), não por auditoria manual |
 | Conteúdo acessível a diferentes públicos | Cobertura de faixa etária (`adolescente`/`adulto`/`todas`) nos 14 conteúdos publicados | Consultável via `SELECT faixa_etaria, COUNT(*) FROM conteudo GROUP BY faixa_etaria` |
 | Engajamento com aprendizado ativo (quiz) | Nº de tentativas de quiz registradas (`tentativa_quiz`) | Zero até o Ciclo 9 (`docs/pdca.md`); indicador só passa a existir de fato quando visitantes começarem a jogar em produção |
 
@@ -64,8 +64,8 @@ provam à banca que o sistema entrega o que promete).
 | Meta | Indicador | Situação atual |
 |---|---|---|
 | Qualidade de código sustentável para 2 alunos manterem | Cobertura de teste automatizado nos services críticos de segurança | 6 suítes, 24 testes, focados em auth/quiz/dúvida/rate-limit (`docs/testes.md`) |
-| Segurança de dados sensíveis | Nenhuma tabela com dado de saúde do usuário; senha sempre com hash | Verificado no schema (`RNF03`, `RNF09`) |
-| Portabilidade dev → produção sem retrabalho | Zero caminho absoluto hardcoded | Verificado (`RNF10`) — todo caminho via `.env`/`path.join` |
+| Segurança de dados sensíveis | Nenhuma tabela com dado de saúde do usuário; senha sempre com hash | Verificado no schema (`RNF23`, `RNF21`) |
+| Portabilidade dev → produção sem retrabalho | Zero caminho absoluto hardcoded | Verificado — garantia técnica do projeto, ver `docs/requisitos.md` — todo caminho via `.env`/`path.join` |
 | Continuidade do serviço | Processo gerenciado por systemd com reinício automático em falha | `deploy/plataforma.service` (`Restart=always`, a confirmar no arquivo antes do deploy real) |
 
 ### Matriz de risco
@@ -75,7 +75,7 @@ provam à banca que o sistema entrega o que promete).
 | Sessão de admin em `MemoryStore` some a cada restart do processo em produção | Média | Baixo (só afeta admin, não visitante) | Trocar por `connect-sqlite3` (já na lista de dependências aprovadas para deploy) antes de ir a produção real |
 | `POST /admin/login` sem limite de tentativas — força bruta possível | Baixa (site pequeno, sem valor de ataque óbvio) | Médio (comprometeria o único papel privilegiado) | Aplicar `express-rate-limit` (já aprovado para a fase de deploy) nessa rota especificamente |
 | Conteúdo de saúde sensível publicado sem fonte oficial por erro humano no admin | Baixa | Alto (credibilidade do projeto) | Campo `fontes` obrigatório no banco (RF03) — risco já mitigado estruturalmente, não depende de disciplina do editor |
-| Dúvida anônima usada para abuso/spam | Média | Baixo | Filtro de conteúdo bloqueado + rate limit por sessão (RF10/RF11), já implementados e testados |
+| Dúvida anônima usada para abuso/spam | Média | Baixo | Filtro de conteúdo bloqueado + rate limit por sessão (RF17 e RNF24), já implementados e testados |
 | Perda de dado por rodar `npm run seed` em produção sem perceber que recria tabelas | Baixa | Alto (perda de conteúdo real) | Seed é idempotente e verifica `tabelaVazia()` antes de inserir (não sobrescreve dado existente) — mas backup antes de qualquer operação de banco em produção continua sendo prática recomendada |
 | ~~Quiz sem dado de exemplo quebra a demonstração para a banca~~ | ~~Alta~~ | ~~Alto~~ | **Mitigado no Ciclo 9** (`docs/pdca.md`): `database/seed.js#seedQuizzes` popula 1 quiz de exemplo e `/quiz/1` foi testado manualmente com 200 OK |
 

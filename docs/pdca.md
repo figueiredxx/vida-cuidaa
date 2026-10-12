@@ -34,7 +34,7 @@ para a banca: é a leitura formal do que o Git já registra.
   `conteudo.controller.js`, view `conteudos.ejs`.
 - **Check**: testar manualmente combinações de filtro (categoria só, faixa só,
   busca só, os três juntos) e paginação nos extremos (página 1, última página).
-- **Act**: consolidado como RF01/RF02 em `docs/requisitos.md`.
+- **Act**: consolidado como RF02, RF03 e RF05 em `docs/requisitos.md`.
 
 ## Ciclo 3 — Sprint 3: autenticação e CRUD
 
@@ -76,7 +76,7 @@ para a banca: é a leitura formal do que o Git já registra.
   caracteres, mais de 3 vezes seguidas). **Lacuna identificada nesta sessão**:
   automatizado em `tests/duvida.service.test.js` e
   `tests/rate-limit.middleware.test.js` — inclusive um teste que lê as colunas
-  reais da tabela para provar o anonimato (RNF08), não só confiar no schema
+  reais da tabela para provar o anonimato (RNF21), não só confiar no schema
   visualmente.
 - **Act**: "anonimato garantido pelo schema, não por convenção de código" virou
   princípio de projeto — mais forte que checklist, porque não depende de

@@ -1,4 +1,4 @@
-// Cobre o requisito RF07: a correção do quiz acontece inteiramente no servidor
+// Cobre o requisito RF08: a correção do quiz acontece inteiramente no servidor
 // e a alternativa correta nunca é enviada ao navegador antes do envio da resposta.
 const { test } = require('node:test');
 const assert = require('node:assert/strict');

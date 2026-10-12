@@ -41,14 +41,14 @@ flowchart TD
 ## Notas do fluxo
 
 - O gateway **"Passa no filtro de conteúdo impróprio?"** corresponde a
-  `duvida.service.js#contemConteudoBloqueado` (RF10) — coberto por
+  `duvida.service.js#contemConteudoBloqueado` (RF17) — coberto por
   `tests/duvida.service.test.js`.
 - O gateway **"Dentro do limite de tentativas da sessão?"** corresponde a
-  `rate-limit.middleware.js#limitarPorSessao` (RF11) — coberto por
+  `rate-limit.middleware.js#limitarPorSessao` (RNF24) — coberto por
   `tests/rate-limit.middleware.test.js`.
 - A atividade **"Servidor corrige no backend"** é destacada como sub-processo
   porque é o ponto de maior sensibilidade de segurança do fluxo público: o
   gabarito (`alternativa.correta`) nunca trafega para o navegador antes do
-  envio da resposta (RF07) — coberto por `tests/quiz-player.service.test.js`.
+  envio da resposta (RF08) — coberto por `tests/quiz-player.service.test.js`.
 - Em nenhum ponto deste fluxo o visitante se identifica — não há tela de login
   nem campo de nome/e-mail em qualquer atividade da raia "Visitante".

@@ -1,4 +1,4 @@
-// Cobre o requisito RF05 (só admin/editor autenticado acessa o CRUD): as
+// Cobre os requisitos RF20 e RF23 (só admin/editor autenticado acessa o CRUD): as
 // funções de guarda de rota devem redirecionar ou bloquear corretamente.
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
