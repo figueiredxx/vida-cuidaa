@@ -65,6 +65,30 @@ Com `NODE_ENV=production`, a aplicação automaticamente ativa `trust proxy` e m
 de sessão como `secure` — por isso o HTTPS via Nginx/Let's Encrypt precisa estar na frente
 antes de ativar produção, senão o cookie de sessão não é enviado pelo navegador.
 
+## Unidades de saúde (CNES)
+
+A lista de unidades de saúde de Manaus vem da API de dados abertos do Ministério
+da Saúde (CNES). A coleta **não acontece em tempo de execução**: o site lê a tabela
+`unidade_saude` do próprio banco, para não depender de a API externa estar no ar
+durante a apresentação.
+
+```bash
+npm run extrair:cnes    # consulta a API e grava database/cnes-manaus.json
+npm run migrar          # cria a tabela unidade_saude em bancos já existentes
+npm run importar:cnes   # carrega o JSON na tabela
+```
+
+Quem clonar o repositório roda só os dois últimos: o JSON já está versionado.
+A extração só precisa ser repetida quando se quiser atualizar os dados.
+
+Detalhes da API, levantados na marra porque a documentação é escassa:
+
+- Base: `https://apidadosabertos.saude.gov.br/cnes/estabelecimentos` (sem prefixo de versão)
+- Manaus é o código IBGE `130260`
+- `limit` tem teto de 20 — paginar por `offset` é obrigatório (~87 requisições)
+- Dos 1.735 estabelecimentos ativos, 659 são de tipos que atendem ao público e
+  todos têm coordenada
+
 ## Quadro do Trello
 
 Ferramenta de apoio da dupla para consultar e atualizar o quadro de tarefas do TCC
@@ -121,7 +145,7 @@ src/
   middlewares/{auth,error-handler,rate-limit}.js
   views/{partials,site,admin}/
   public/{css,js,img}/
-database/{schema.sql,seed.js,database.sqlite}
+database/{schema.sql,seed.js,migrar.js,importar-cnes.js,cnes-manaus.json,database.sqlite}
 deploy/{plataforma.service,nginx.conf}
 docs/
   der.md                      -- diagrama entidade-relacionamento (Mermaid)

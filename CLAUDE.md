@@ -41,7 +41,7 @@ src/
   middlewares/{auth,errorHandler}.js
   views/{partials,site,admin}/
   public/{css,js,img}/
-database/{schema.sql,seed.sql,database.sqlite}
+database/{schema.sql,seed.js,migrar.js,importar-cnes.js,cnes-manaus.json,database.sqlite}
 ```
 
 ## Ambientes
@@ -87,8 +87,16 @@ Meta: WCAG 2.1 nível AA.
 ## Fora de escopo — não implementar, mesmo que pareça útil
 
 Diagnóstico ou triagem clínica, chatbot ou IA generativa, teleatendimento,
-app mobile nativo, integração com SUS, rede social ou comentários públicos livres,
+app mobile nativo, rede social ou comentários públicos livres,
 upload de arquivos por usuário final.
+
+Sobre integração com o SUS: nada de agendamento, prontuário, cartão SUS ou
+qualquer troca de dado de paciente. Consultar **base pública de dados abertos**
+do Ministério da Saúde é permitido e está no escopo — é o caso do CNES, usado
+para listar unidades de saúde de Manaus (RF24–RF28 do quadro do Trello). A
+extração roda fora da aplicação (`npm run extrair:cnes`) e o resultado fica
+versionado em `database/cnes-manaus.json`, para o site nunca depender da API
+externa estar no ar.
 
 ## Como trabalhar
 

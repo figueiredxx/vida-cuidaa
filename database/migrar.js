@@ -23,6 +23,10 @@ function colunaExiste(tabela, coluna) {
         .some((c) => c.name === coluna);
 }
 
+function tabelaExiste(tabela) {
+    return !!db.prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?").get(tabela);
+}
+
 // Vincula cada questao ao artigo de onde ela saiu, para o resultado do quiz
 // conseguir indicar qual conteudo o visitante deve revisar.
 function adicionarConteudoIdEmQuestao() {
@@ -35,6 +39,34 @@ function adicionarConteudoIdEmQuestao() {
     console.log('questao.conteudo_id adicionada.');
 }
 
+// Unidades de saude do CNES, usadas pela pagina de servicos. A carga em si fica
+// no importar-cnes.js; aqui so garante que a tabela exista.
+function criarTabelaUnidadeSaude() {
+    if (tabelaExiste('unidade_saude')) {
+        console.log('unidade_saude ja existe - nada a fazer.');
+        return;
+    }
+    db.exec(`
+        CREATE TABLE unidade_saude (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            codigo_cnes TEXT NOT NULL UNIQUE,
+            nome TEXT NOT NULL,
+            logradouro TEXT,
+            numero TEXT,
+            bairro TEXT,
+            telefone TEXT,
+            latitude REAL NOT NULL,
+            longitude REAL NOT NULL,
+            tipo_unidade INTEGER NOT NULL,
+            atende_sus INTEGER NOT NULL DEFAULT 0,
+            turno_atendimento TEXT
+        )
+    `);
+    db.exec('CREATE INDEX IF NOT EXISTS idx_unidade_saude_bairro ON unidade_saude(bairro)');
+    console.log('unidade_saude criada.');
+}
+
 adicionarConteudoIdEmQuestao();
+criarTabelaUnidadeSaude();
 db.close();
 console.log('Migracoes concluidas.');
