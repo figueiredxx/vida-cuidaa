@@ -150,3 +150,75 @@ test('buscarDataExtracao devolve null quando nenhuma extracao foi registrada', (
 
     assert.equal(unidadeSaudeRepository.buscarDataExtracao(), null);
 });
+
+// RF28: busca por bairro, o caminho de quem nega a geolocalizacao. O nome exibido
+// e' o corrigido (bairro_normalizado); o valor cru do CNES fica na coluna bairro,
+// para a origem do dado continuar auditavel.
+test('substituirTodas grava o bairro ja corrigido, sem perder o valor cru', () => {
+    unidadeSaudeRepository.substituirTodas([
+        unidade({ bairro: 'NOSSA SENHORA DAS GR', bairro_normalizado: 'Nossa Senhora das Graças' }),
+    ]);
+
+    const gravada = db.prepare('SELECT bairro, bairro_normalizado FROM unidade_saude').get();
+    assert.equal(gravada.bairro, 'NOSSA SENHORA DAS GR');
+    assert.equal(gravada.bairro_normalizado, 'Nossa Senhora das Graças');
+});
+
+test('listarComFiltros filtra por bairro', () => {
+    unidadeSaudeRepository.substituirTodas([
+        unidade({ codigo_cnes: '3000001', nome: 'UBS CENTRO', bairro_normalizado: 'Centro' }),
+        unidade({ codigo_cnes: '3000002', nome: 'UBS ALEIXO', bairro_normalizado: 'Aleixo' }),
+        unidade({ codigo_cnes: '3000003', nome: 'POLICLINICA CENTRO', bairro_normalizado: 'Centro' }),
+    ]);
+
+    const doCentro = unidadeSaudeRepository.listarComFiltros({ bairro: 'Centro' });
+
+    assert.equal(doCentro.length, 2);
+    assert.deepEqual(
+        doCentro.map((u) => u.nome),
+        ['POLICLINICA CENTRO', 'UBS CENTRO']
+    );
+});
+
+test('listarComFiltros combina bairro com tipo e SUS', () => {
+    unidadeSaudeRepository.substituirTodas([
+        unidade({ codigo_cnes: '3000004', bairro_normalizado: 'Centro', tipo_unidade: 2, atende_sus: 1 }),
+        unidade({ codigo_cnes: '3000005', bairro_normalizado: 'Centro', tipo_unidade: 5, atende_sus: 1 }),
+        unidade({ codigo_cnes: '3000006', bairro_normalizado: 'Centro', tipo_unidade: 5, atende_sus: 0 }),
+        unidade({ codigo_cnes: '3000007', bairro_normalizado: 'Aleixo', tipo_unidade: 5, atende_sus: 1 }),
+    ]);
+
+    const hospitaisSus = unidadeSaudeRepository.listarComFiltros({ bairro: 'Centro', tipo: 5, apenasSus: true });
+
+    assert.equal(hospitaisSus.length, 1);
+    assert.equal(hospitaisSus[0].codigo_cnes, '3000005');
+});
+
+test('listarBairrosDisponiveis conta as unidades de cada bairro em ordem alfabetica', () => {
+    unidadeSaudeRepository.substituirTodas([
+        unidade({ codigo_cnes: '3000020', bairro_normalizado: 'Centro' }),
+        unidade({ codigo_cnes: '3000021', bairro_normalizado: 'Centro' }),
+        unidade({ codigo_cnes: '3000022', bairro_normalizado: 'Aleixo' }),
+        unidade({ codigo_cnes: '3000023', bairro_normalizado: null }),
+    ]);
+
+    const bairros = unidadeSaudeRepository.listarBairrosDisponiveis();
+
+    // O bairro sem correcao nao entra: oferecer filtro sem nome confunde.
+    assert.deepEqual(bairros, [
+        { bairro: 'Aleixo', total: 1 },
+        { bairro: 'Centro', total: 2 },
+    ]);
+});
+
+test('listarBairrosDisponiveis respeita o filtro de SUS', () => {
+    unidadeSaudeRepository.substituirTodas([
+        unidade({ codigo_cnes: '3000011', bairro_normalizado: 'Centro', atende_sus: 1 }),
+        unidade({ codigo_cnes: '3000012', bairro_normalizado: 'Centro', atende_sus: 0 }),
+        unidade({ codigo_cnes: '3000013', bairro_normalizado: 'Flores', atende_sus: 0 }),
+    ]);
+
+    const bairros = unidadeSaudeRepository.listarBairrosDisponiveis({ apenasSus: true });
+
+    assert.deepEqual(bairros, [{ bairro: 'Centro', total: 1 }]);
+});

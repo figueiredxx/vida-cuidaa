@@ -34,7 +34,7 @@ Convenção: `RF` = requisito funcional, `RNF` = requisito não funcional.
 | RF25 | Calcular a distância e listar os estabelecimentos ordenados por proximidade | Sprint 8 | `unidade-saude.service.js#calcularDistanciaKm` (Haversine) e `#buscarProximas`; `unidade-saude.repository.js` | `/servicos?lat=-3.1302&lon=-60.0233`; ver `tests/unidade-saude.service.test.js` |
 | RF26 | Exibir nome, endereço, bairro, telefone, tipo de unidade, turno, indicação de atendimento pelo SUS e distância em linha reta | Sprint 8 | `views/site/servicos.ejs` | Conferir um item da lista em `/servicos` com coordenada |
 | RF27 | Permitir filtrar por tipo de unidade e por atendimento pelo SUS | Sprint 8 | `unidade-saude.repository.js#montarFiltros/listarComFiltros`, `#listarTiposDisponiveis` | `/servicos?lat=..&lon=..&tipo=5` e `&sus=nao` |
-| RF28 | Permitir busca por bairro quando a geolocalização for negada ou indisponível | **Não implementado** — cartão [CNES 4/5] | — | — |
+| RF28 | Permitir busca por bairro quando a geolocalização for negada ou indisponível | Sprint 8 | `bairro.service.js#normalizarBairro` (tabela de correção), `unidade-saude.service.js#listarPorBairro`/`#listarBairrosDisponiveis`, `unidade-saude.repository.js#montarFiltros`, coluna `unidade_saude.bairro_normalizado`, seletor em `views/site/servicos.ejs` | `/servicos?bairro=Centro`; negar a permissão de localização leva o foco ao seletor. Ver `tests/bairro.service.test.js` |
 | RF30 | Permitir abrir a rota até o estabelecimento em aplicativo de mapas externo | Sprint 8 | `views/site/servicos.ejs` (link `maps/dir/?api=1&destination=`) | Clicar em "Ver rota até…" em qualquer item |
 
 ## Regras de negócio do módulo de localização
@@ -46,6 +46,24 @@ Convenção: `RF` = requisito funcional, `RNF` = requisito não funcional.
 | RN21 | Toda distância identificada como medida em linha reta | `views/site/servicos.ejs`: o texto "em linha reta" acompanha cada distância, além da nota no topo da lista |
 | RN22 | A base registra a data de sua extração, exibida ao usuário | `extracao_cnes` no `schema.sql`; `extrair-cnes.js` grava `extraido_em` no JSON, `importar-cnes.js` registra, rodapé de `/servicos` exibe |
 | RN23 | O sistema não informa disponibilidade de medicamentos ou insumos | Não há campo de medicamento ou insumo em `unidade_saude` nem na página |
+
+### Nota sobre o nome do bairro (RF28)
+
+O CNES não devolve o bairro em forma utilizável: os 659 estabelecimentos de Manaus
+chegam com **95 grafias distintas** para cerca de 63 bairros, somando truncamento em
+20 caracteres (`NOSSA SENHORA DAS GR`), erro de digitação (`ADRIANNOPOLIS`, `CHPADA`),
+abreviação (`N SRA DAS GRACAS`) e subdivisão informal (`COMPENSA I/II/III`).
+
+A correção fica em `src/services/bairro.service.js`, cobrindo os 95 valores. O valor
+cru permanece na coluna `unidade_saude.bairro` e o corrigido em `bairro_normalizado`,
+de modo que a origem do dado continue auditável. Um teste percorre
+`database/cnes-manaus.json` e falha se uma reextração trouxer valor fora da tabela —
+a falha aparece no `npm test`, não na tela do usuário.
+
+Quatro valores usados pelo CNES não constam da divisão oficial de bairros de Manaus
+(`Km 08`, `Nossa Senhora de Fátima`, `Ponta Pelada` e `Zona Rural`). Estão marcados no
+código e mantidos apenas com a grafia corrigida: descartá-los esconderia unidades que
+atendem gente de verdade.
 
 ## Requisitos não funcionais
 

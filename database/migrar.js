@@ -54,6 +54,7 @@ function criarTabelaUnidadeSaude() {
             logradouro TEXT,
             numero TEXT,
             bairro TEXT,
+            bairro_normalizado TEXT,
             telefone TEXT,
             latitude REAL NOT NULL,
             longitude REAL NOT NULL,
@@ -63,7 +64,7 @@ function criarTabelaUnidadeSaude() {
             turno_atendimento TEXT
         )
     `);
-    db.exec('CREATE INDEX IF NOT EXISTS idx_unidade_saude_bairro ON unidade_saude(bairro)');
+    db.exec('CREATE INDEX IF NOT EXISTS idx_unidade_saude_bairro ON unidade_saude(bairro_normalizado)');
     db.exec('CREATE INDEX IF NOT EXISTS idx_unidade_saude_tipo ON unidade_saude(tipo_unidade)');
     console.log('unidade_saude criada.');
 }
@@ -77,6 +78,19 @@ function adicionarTipoDescricaoEmUnidadeSaude() {
     }
     db.exec('ALTER TABLE unidade_saude ADD COLUMN tipo_descricao TEXT');
     console.log('unidade_saude.tipo_descricao adicionada.');
+}
+
+// RF28: o bairro corrigido, usado na busca e na exibicao. O valor cru do CNES
+// continua na coluna bairro, para a origem do dado permanecer auditavel.
+function adicionarBairroNormalizadoEmUnidadeSaude() {
+    if (!tabelaExiste('unidade_saude') || colunaExiste('unidade_saude', 'bairro_normalizado')) {
+        console.log('unidade_saude.bairro_normalizado ja existe - nada a fazer.');
+        return;
+    }
+    db.exec('ALTER TABLE unidade_saude ADD COLUMN bairro_normalizado TEXT');
+    db.exec('DROP INDEX IF EXISTS idx_unidade_saude_bairro');
+    db.exec('CREATE INDEX idx_unidade_saude_bairro ON unidade_saude(bairro_normalizado)');
+    console.log('unidade_saude.bairro_normalizado adicionada. Rode: npm run importar:cnes');
 }
 
 // RN22: a data da extracao da base precisa ser registrada e exibida ao usuario.
@@ -97,6 +111,7 @@ function criarTabelaExtracaoCnes() {
 adicionarConteudoIdEmQuestao();
 criarTabelaUnidadeSaude();
 adicionarTipoDescricaoEmUnidadeSaude();
+adicionarBairroNormalizadoEmUnidadeSaude();
 criarTabelaExtracaoCnes();
 db.close();
 console.log('Migracoes concluidas.');

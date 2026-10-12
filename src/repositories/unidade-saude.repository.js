@@ -2,9 +2,9 @@ const db = require('../config/database');
 
 const INSERIR = `
     INSERT INTO unidade_saude
-        (codigo_cnes, nome, logradouro, numero, bairro, telefone,
+        (codigo_cnes, nome, logradouro, numero, bairro, bairro_normalizado, telefone,
          latitude, longitude, tipo_unidade, tipo_descricao, atende_sus, turno_atendimento)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 `;
 
 // Troca a lista inteira de uma vez. A carga vem de uma extracao completa do CNES,
@@ -22,6 +22,7 @@ function substituirTodas(unidades) {
                 u.logradouro,
                 u.numero,
                 u.bairro,
+                u.bairro_normalizado,
                 u.telefone,
                 u.latitude,
                 u.longitude,
@@ -38,7 +39,7 @@ function substituirTodas(unidades) {
 
 // Monta o WHERE no mesmo padrao do conteudo.repository: clausula com ? e os
 // valores a parte, nunca concatenados.
-function montarFiltros({ apenasSus, tipo }) {
+function montarFiltros({ apenasSus, tipo, bairro }) {
     const condicoes = ['1 = 1'];
     const params = [];
 
@@ -49,13 +50,37 @@ function montarFiltros({ apenasSus, tipo }) {
         params.push(Number(tipo));
     }
 
+    // RF28. O filtro bate no nome ja corrigido, nunca no valor cru do CNES: e' o
+    // mesmo nome que o seletor da pagina oferece.
+    if (bairro !== undefined && bairro !== null && bairro !== '') {
+        condicoes.push('bairro_normalizado = ?');
+        params.push(String(bairro));
+    }
+
     return { clausula: condicoes.join(' AND '), params };
 }
 
-function listarComFiltros({ apenasSus, tipo } = {}) {
-    const { clausula, params } = montarFiltros({ apenasSus, tipo });
+function listarComFiltros({ apenasSus, tipo, bairro } = {}) {
+    const { clausula, params } = montarFiltros({ apenasSus, tipo, bairro });
 
     return db.prepare(`SELECT * FROM unidade_saude WHERE ${clausula} ORDER BY nome`).all(...params);
+}
+
+// Alimenta o seletor de bairros do RF28. A contagem aparece ao lado do nome para
+// a pessoa saber o que esperar antes de escolher. Quem ficou sem correcao de nome
+// fica de fora: filtro sem nome legivel so atrapalha.
+function listarBairrosDisponiveis({ apenasSus } = {}) {
+    const { clausula, params } = montarFiltros({ apenasSus });
+
+    return db
+        .prepare(
+            `SELECT bairro_normalizado AS bairro, COUNT(*) AS total
+               FROM unidade_saude
+              WHERE ${clausula} AND bairro_normalizado IS NOT NULL
+           GROUP BY bairro_normalizado
+           ORDER BY bairro_normalizado`
+        )
+        .all(...params);
 }
 
 // Alimenta o select de tipos da pagina. So lista o que existe na base, para nao
@@ -95,6 +120,7 @@ module.exports = {
     substituirTodas,
     listarComFiltros,
     listarTiposDisponiveis,
+    listarBairrosDisponiveis,
     contar,
     registrarExtracao,
     buscarDataExtracao,

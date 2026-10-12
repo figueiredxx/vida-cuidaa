@@ -28,6 +28,19 @@
             <input type="hidden" name="lat" id="campo-lat" value="<%= latitude === null ? '' : latitude %>">
             <input type="hidden" name="lon" id="campo-lon" value="<%= longitude === null ? '' : longitude %>">
 
+            <%# RF28: a busca por bairro nao depende de geolocalizacao nenhuma. %>
+            <div class="filtros__campo">
+                <label for="bairro">Bairro</label>
+                <select id="bairro" name="bairro">
+                    <option value="">Qualquer bairro (usar minha localização)</option>
+                    <% bairros.forEach(function(b) { %>
+                        <option value="<%= b.bairro %>" <%= bairro === b.bairro ? 'selected' : '' %>>
+                            <%= b.bairro %> (<%= b.total %>)
+                        </option>
+                    <% }); %>
+                </select>
+            </div>
+
             <div class="filtros__campo">
                 <label for="tipo">Tipo de unidade</label>
                 <select id="tipo" name="tipo">
@@ -47,7 +60,7 @@
                 <label for="sus">Mostrar também unidades que não atendem pelo SUS</label>
             </div>
 
-            <button type="submit" class="botao-primario">Aplicar filtros</button>
+            <button type="submit" class="botao-primario">Buscar</button>
         </form>
 
         <p class="servicos__acoes">
@@ -65,33 +78,48 @@
     </section>
 
     <section aria-labelledby="titulo-resultado" id="resultado-servicos" tabindex="-1">
-        <h2 id="titulo-resultado">Unidades encontradas</h2>
+        <h2 id="titulo-resultado">
+            <% if (bairro) { %>Unidades em <%= bairro %><% } else { %>Unidades encontradas<% } %>
+        </h2>
 
         <% if (unidades === null) { %>
             <p class="estado-vazio">
-                Use o botão acima para buscar as unidades mais próximas. Se preferir não
-                compartilhar sua localização, em breve será possível buscar por bairro.
+                Use o botão acima para buscar as unidades mais próximas de você. Se
+                preferir não compartilhar sua localização, escolha um bairro na lista
+                e clique em <strong>Buscar</strong>.
             </p>
         <% } else if (unidades.length === 0) { %>
             <p class="estado-vazio">
-                Nenhuma unidade encontrada com os filtros escolhidos. Tente outro tipo de
-                unidade ou marque a opção de mostrar unidades que não atendem pelo SUS.
+                Nenhuma unidade encontrada com os filtros escolhidos. Tente outro bairro,
+                outro tipo de unidade ou marque a opção de mostrar unidades que não
+                atendem pelo SUS.
             </p>
         <% } else { %>
-            <p class="servicos__linha-reta">
-                As distâncias são medidas <strong>em linha reta</strong>, não pelo caminho
-                a percorrer. Em Manaus, igarapés e o traçado das ruas costumam tornar o
-                percurso real bem maior do que o número mostrado aqui.
-            </p>
+            <% if (bairro) { %>
+                <p class="servicos__contagem">
+                    <%= unidades.length %> <%= unidades.length === 1 ? 'unidade' : 'unidades' %>
+                    <%= unidades.length === 1 ? 'encontrada' : 'encontradas' %> em <%= bairro %>.
+                </p>
+            <% } %>
+
+            <% if (unidades[0].distancia_km !== undefined) { %>
+                <p class="servicos__linha-reta">
+                    As distâncias são medidas <strong>em linha reta</strong>, não pelo caminho
+                    a percorrer. Em Manaus, igarapés e o traçado das ruas costumam tornar o
+                    percurso real bem maior do que o número mostrado aqui.
+                </p>
+            <% } %>
 
             <ol class="servicos-lista">
                 <% unidades.forEach(function(unidade) { %>
                     <li class="servicos-lista__item <%= unidade.atende_sus ? '' : 'servicos-lista__item--particular' %>">
                         <h3 class="servicos-lista__nome"><%= unidade.nome %></h3>
 
-                        <p class="servicos-lista__distancia">
-                            <%= unidade.distancia_km.toFixed(1).replace('.', ',') %> km em linha reta
-                        </p>
+                        <% if (unidade.distancia_km !== undefined) { %>
+                            <p class="servicos-lista__distancia">
+                                <%= unidade.distancia_km.toFixed(1).replace('.', ',') %> km em linha reta
+                            </p>
+                        <% } %>
 
                         <% if (unidade.atende_sus) { %>
                             <p class="servicos-lista__selo servicos-lista__selo--sus">Atende pelo SUS</p>
@@ -105,7 +133,10 @@
 
                         <p class="servicos-lista__endereco">
                             <%= unidade.logradouro %><%= unidade.numero ? ', ' + unidade.numero : '' %>
-                            <% if (unidade.bairro) { %> &mdash; <%= unidade.bairro %><% } %>
+                            <%# Exibe o nome corrigido; o valor cru do CNES fica no banco. %>
+                            <% if (unidade.bairro_normalizado || unidade.bairro) { %>
+                                &mdash; <%= unidade.bairro_normalizado || unidade.bairro %>
+                            <% } %>
                         </p>
 
                         <% if (unidade.telefone) { %>

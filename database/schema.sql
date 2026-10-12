@@ -104,6 +104,7 @@ CREATE TABLE IF NOT EXISTS unidade_saude (
     logradouro TEXT,
     numero TEXT,
     bairro TEXT,
+    bairro_normalizado TEXT,
     telefone TEXT,
     latitude REAL NOT NULL,
     longitude REAL NOT NULL,
@@ -124,5 +125,5 @@ CREATE INDEX IF NOT EXISTS idx_questao_quiz ON questao(quiz_id);
 CREATE INDEX IF NOT EXISTS idx_alternativa_questao ON alternativa(questao_id);
 CREATE INDEX IF NOT EXISTS idx_questao_conteudo ON questao(conteudo_id);
 CREATE INDEX IF NOT EXISTS idx_duvida_status ON duvida(status);
-CREATE INDEX IF NOT EXISTS idx_unidade_saude_bairro ON unidade_saude(bairro);
+CREATE INDEX IF NOT EXISTS idx_unidade_saude_bairro ON unidade_saude(bairro_normalizado);
 CREATE INDEX IF NOT EXISTS idx_unidade_saude_tipo ON unidade_saude(tipo_unidade);

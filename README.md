@@ -68,7 +68,8 @@ antes de ativar produção, senão o cookie de sessão não é enviado pelo nave
 ## Unidades de saúde (CNES)
 
 A página `/servicos` lista unidades de saúde de Manaus ordenadas pela distância até
-quem acessa, com filtro por tipo de unidade e por atendimento pelo SUS. Os dados vêm
+quem acessa, com filtro por bairro, por tipo de unidade e por atendimento pelo SUS.
+Quem não quiser (ou não puder) compartilhar a localização escolhe o bairro na lista. Os dados vêm
 da API de dados abertos do Ministério da Saúde (CNES). A coleta **não acontece em
 tempo de execução**: o site lê a tabela `unidade_saude` do próprio banco, para não
 depender de a API externa estar no ar durante a apresentação.
@@ -93,6 +94,10 @@ Detalhes da API, levantados na marra porque a documentação é escassa:
   endpoint `/cnes/tipounidades`
 - A distância é calculada por Haversine, **em linha reta** — não é distância de
   percurso, e a página diz isso em cada item (RN21)
+- O campo de bairro vem **truncado em 20 caracteres** (`NOSSA SENHORA DAS GR`) e ainda
+  traz erro de digitação, abreviação e subdivisão informal: 95 grafias para cerca de
+  63 bairros. A correção fica em `src/services/bairro.service.js`, e um teste quebra
+  se uma reextração trouxer valor fora da tabela
 
 ## Quadro do Trello
 

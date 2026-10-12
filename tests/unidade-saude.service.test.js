@@ -187,3 +187,132 @@ test('listarTiposDisponiveis entrega os tipos para o filtro da pagina', () => {
         { codigo: 2, descricao: 'CENTRO DE SAUDE/UNIDADE BASICA' },
     ]);
 });
+
+// RF28: busca por bairro. E' o caminho de quem nao concede a geolocalizacao, e
+// tambem de quem prefere procurar pelo bairro onde mora.
+function unidadeEmBairro(bairroCru, nome, latitude = -3.13, longitude = -60.023, atendeSus = 1) {
+    return { ...unidade(latitude, longitude, nome, atendeSus), bairro: bairroCru };
+}
+
+test('importar corrige o nome do bairro antes de gravar', () => {
+    unidadeSaudeService.importar(
+        [unidadeEmBairro('NOSSA SENHORA DAS GR', 'UBS GRACAS'), unidadeEmBairro('CHPADA', 'UBS CHAPADA')],
+        '2026-10-12'
+    );
+
+    const gravadas = unidadeSaudeRepository.listarComFiltros({});
+    const porNome = Object.fromEntries(gravadas.map((u) => [u.nome, u]));
+
+    assert.equal(porNome['UBS GRACAS'].bairro_normalizado, 'Nossa Senhora das Graças');
+    assert.equal(porNome['UBS CHAPADA'].bairro_normalizado, 'Chapada');
+    // O valor cru do CNES nao se perde: a pagina mostra o corrigido, a auditoria
+    // continua possivel.
+    assert.equal(porNome['UBS GRACAS'].bairro, 'NOSSA SENHORA DAS GR');
+});
+
+test('importar registra a data da extracao junto com a base', () => {
+    unidadeSaudeService.importar([unidadeEmBairro('CENTRO', 'UBS CENTRO')], '2026-10-12');
+
+    assert.equal(unidadeSaudeService.buscarDataExtracao(), '2026-10-12');
+});
+
+test('listarPorBairro devolve todas as unidades do bairro, em ordem de nome', () => {
+    unidadeSaudeService.importar(
+        [
+            unidadeEmBairro('CENTRO', 'UBS ZONA CENTRO'),
+            unidadeEmBairro('CENTRO', 'POLICLINICA CENTRO'),
+            unidadeEmBairro('ALEIXO', 'UBS ALEIXO'),
+        ],
+        '2026-10-12'
+    );
+
+    const encontradas = unidadeSaudeService.listarPorBairro({ bairro: 'Centro' });
+
+    assert.deepEqual(
+        encontradas.map((u) => u.nome),
+        ['POLICLINICA CENTRO', 'UBS ZONA CENTRO']
+    );
+    // Sem coordenada nao ha distancia a mostrar.
+    assert.equal(encontradas[0].distancia_km, undefined);
+});
+
+test('listarPorBairro nao corta a lista em dez: quem escolheu o bairro quer o bairro', () => {
+    const muitas = [];
+    for (let i = 0; i < 14; i += 1) muitas.push(unidadeEmBairro('CENTRO', `UBS ${String(i).padStart(2, '0')}`));
+    unidadeSaudeService.importar(muitas, '2026-10-12');
+
+    assert.equal(unidadeSaudeService.listarPorBairro({ bairro: 'Centro' }).length, 14);
+});
+
+test('listarPorBairro ordena por distancia quando a localizacao tambem veio', () => {
+    unidadeSaudeService.importar(
+        [
+            unidadeEmBairro('CENTRO', 'UBS LONGE', CENTRO.latitude + 0.1, CENTRO.longitude),
+            unidadeEmBairro('CENTRO', 'A UBS PERTO', CENTRO.latitude + 0.01, CENTRO.longitude),
+        ],
+        '2026-10-12'
+    );
+
+    const encontradas = unidadeSaudeService.listarPorBairro({
+        bairro: 'Centro',
+        latitude: CENTRO.latitude,
+        longitude: CENTRO.longitude,
+    });
+
+    // Por nome, 'A UBS PERTO' viria primeiro de qualquer jeito; o que o teste
+    // cobra e' a distancia calculada e a ordem vindo dela.
+    assert.deepEqual(
+        encontradas.map((u) => u.nome),
+        ['A UBS PERTO', 'UBS LONGE']
+    );
+    assert.ok(Math.abs(encontradas[0].distancia_km - 1.11) < 0.05);
+    assert.ok(Math.abs(encontradas[1].distancia_km - 11.12) < 0.05);
+});
+
+test('listarPorBairro aplica os filtros de tipo e de SUS', () => {
+    unidadeSaudeService.importar(
+        [
+            { ...unidadeEmBairro('CENTRO', 'HOSPITAL SUS'), tipo_unidade: 5, atende_sus: 1 },
+            { ...unidadeEmBairro('CENTRO', 'HOSPITAL PARTICULAR'), tipo_unidade: 5, atende_sus: 0 },
+            { ...unidadeEmBairro('CENTRO', 'UBS QUALQUER'), tipo_unidade: 2, atende_sus: 1 },
+        ],
+        '2026-10-12'
+    );
+
+    const encontradas = unidadeSaudeService.listarPorBairro({ bairro: 'Centro', tipo: 5, apenasSus: true });
+
+    assert.deepEqual(
+        encontradas.map((u) => u.nome),
+        ['HOSPITAL SUS']
+    );
+});
+
+test('listarPorBairro devolve null quando o bairro nao foi informado', () => {
+    assert.equal(unidadeSaudeService.listarPorBairro({ bairro: '' }), null);
+    assert.equal(unidadeSaudeService.listarPorBairro({}), null);
+});
+
+test('listarBairrosDisponiveis entrega os bairros para o seletor da pagina', () => {
+    unidadeSaudeService.importar(
+        [
+            unidadeEmBairro('CENTRO', 'UBS UM'),
+            unidadeEmBairro('N SRA DAS GRACAS', 'UBS DOIS'),
+            unidadeEmBairro('NOSSA SENHORA DAS GR', 'UBS TRES'),
+        ],
+        '2026-10-12'
+    );
+
+    // As duas grafias de Nossa Senhora das Gracas contam como um bairro so.
+    assert.deepEqual(unidadeSaudeService.listarBairrosDisponiveis({ apenasSus: true }), [
+        { bairro: 'Centro', total: 1 },
+        { bairro: 'Nossa Senhora das Graças', total: 2 },
+    ]);
+});
+
+test('buscarProximas continua limitando a dez quando nao ha bairro escolhido', () => {
+    const muitas = [];
+    for (let i = 0; i < 14; i += 1) muitas.push(unidadeEmBairro('CENTRO', `UBS ${String(i).padStart(2, '0')}`));
+    unidadeSaudeService.importar(muitas, '2026-10-12');
+
+    assert.equal(unidadeSaudeService.buscarProximas({ ...CENTRO }).length, 10);
+});

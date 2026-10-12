@@ -64,9 +64,9 @@ function neutralizarFormularioDuvida(html) {
 function neutralizarBuscaServicos(html) {
     return html.replace(
         /<form method="GET" action="\/servicos"[\s\S]*?<\/section>/,
-        '<p class="aviso-estatico">A busca por unidades de saúde depende do servidor ' +
-            'para calcular as distâncias e está disponível apenas na versão publicada ' +
-            'com o backend ativo.</p></section>'
+        '<p class="aviso-estatico">A busca por unidades de saúde, por localização ou ' +
+            'por bairro, depende do servidor e está disponível apenas na versão ' +
+            'publicada com o backend ativo.</p></section>'
     );
 }
 
@@ -199,7 +199,9 @@ async function gerarServicos() {
         titulo: 'Serviços de saúde',
         apenasSus: true,
         tipo: '',
+        bairro: '',
         tipos: unidadeSaudeService.listarTiposDisponiveis(),
+        bairros: unidadeSaudeService.listarBairrosDisponiveis({ apenasSus: true }),
         dataExtracao: unidadeSaudeService.buscarDataExtracao(),
         latitude: null,
         longitude: null,

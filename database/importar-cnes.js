@@ -20,12 +20,15 @@ if (!fs.existsSync(ARQUIVO)) {
     process.exit(1);
 }
 
-const unidadeSaudeRepository = require('../src/repositories/unidade-saude.repository');
+const unidadeSaudeService = require('../src/services/unidade-saude.service');
 
 const { extraido_em: extraidoEm, unidades } = JSON.parse(fs.readFileSync(ARQUIVO, 'utf8'));
 
-unidadeSaudeRepository.substituirTodas(unidades);
-// RN22: a data da extracao acompanha a base e e' exibida na pagina de servicos.
-unidadeSaudeRepository.registrarExtracao(extraidoEm);
+// A carga passa pelo service porque a correcao dos nomes de bairro (RF28) e' regra
+// de negocio: o script so le o arquivo e reporta o resultado.
+const total = unidadeSaudeService.importar(unidades, extraidoEm);
 
-console.log(`${unidadeSaudeRepository.contar()} unidades de saude importadas (base extraida em ${extraidoEm}).`);
+const bairros = unidadeSaudeService.listarBairrosDisponiveis({ apenasSus: false }).length;
+
+console.log(`${total} unidades de saude importadas (base extraida em ${extraidoEm}).`);
+console.log(`${bairros} bairros reconhecidos pela tabela de correcao.`);

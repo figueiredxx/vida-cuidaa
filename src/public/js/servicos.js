@@ -10,21 +10,29 @@
     var campoLon = document.getElementById('campo-lon');
     var status = document.getElementById('status-localizacao');
     var resultado = document.getElementById('resultado-servicos');
+    var campoBairro = document.getElementById('bairro');
 
     if (!botao || !formulario || !campoLat || !campoLon || !status) return;
+
+    // RF28: quando a localizacao nao vem, o seletor de bairro e' a saida. Levar o
+    // foco ate ele evita que a pessoa fique parada diante de um aviso de erro.
+    function oferecerBuscaPorBairro() {
+        if (campoBairro) campoBairro.focus();
+    }
+
+    // Quando a pagina ja veio com resultado, o foco vai para a lista: sem isso,
+    // quem usa leitor de tela nao percebe que algo mudou depois do recarregamento.
+    // Vale para os dois caminhos de busca, por localizacao e por bairro.
+    if (resultado && resultado.querySelector('.servicos-lista')) {
+        resultado.focus();
+    }
 
     // Sem suporte no navegador, o botao nao tem o que fazer: melhor esconder do
     // que oferecer algo que vai falhar.
     if (!navigator.geolocation) {
         botao.hidden = true;
-        status.textContent = 'Este navegador não permite usar a localização. Em breve será possível buscar por bairro.';
+        status.textContent = 'Este navegador não permite usar a localização. Escolha um bairro na lista para ver as unidades.';
         return;
-    }
-
-    // Quando a pagina ja veio com resultado, o foco vai para a lista: sem isso,
-    // quem usa leitor de tela nao percebe que algo mudou depois do recarregamento.
-    if (resultado && campoLat.value) {
-        resultado.focus();
     }
 
     function avisar(texto) {
@@ -33,7 +41,7 @@
 
     function explicarErro(erro) {
         if (erro.code === erro.PERMISSION_DENIED) {
-            return 'Você não autorizou o acesso à localização. Em breve será possível buscar por bairro.';
+            return 'Você não autorizou o acesso à localização. Escolha um bairro na lista para ver as unidades.';
         }
         if (erro.code === erro.POSITION_UNAVAILABLE) {
             return 'Não foi possível determinar sua localização agora. Tente de novo em instantes.';
@@ -58,6 +66,7 @@
             function (erro) {
                 botao.disabled = false;
                 avisar(explicarErro(erro));
+                if (erro.code === erro.PERMISSION_DENIED) oferecerBuscaPorBairro();
             },
             { timeout: 10000 }
         );

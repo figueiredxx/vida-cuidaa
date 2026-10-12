@@ -12,12 +12,15 @@ function exibir(req, res) {
     // e' desligado quando o campo chega explicitamente com 'nao'.
     const apenasSus = req.query.sus !== 'nao';
     const tipo = req.query.tipo || '';
+    const bairro = typeof req.query.bairro === 'string' ? req.query.bairro.trim() : '';
 
     const locals = {
         titulo: 'Serviços de saúde',
         apenasSus,
         tipo,
+        bairro,
         tipos: unidadeSaudeService.listarTiposDisponiveis(),
+        bairros: unidadeSaudeService.listarBairrosDisponiveis({ apenasSus }),
         dataExtracao: unidadeSaudeService.buscarDataExtracao(),
         latitude,
         longitude,
@@ -25,7 +28,16 @@ function exibir(req, res) {
         erro: null,
     };
 
-    // Sem coordenada na URL: primeira visita, a pagina so oferece o botao.
+    // RF28: o bairro escolhido manda na busca. E' o caminho de quem nega a
+    // geolocalizacao, entao nao pode depender de coordenada nenhuma.
+    if (bairro) {
+        return res.render('site/servicos', {
+            ...locals,
+            unidades: unidadeSaudeService.listarPorBairro({ bairro, latitude, longitude, apenasSus, tipo }),
+        });
+    }
+
+    // Sem coordenada e sem bairro: primeira visita, a pagina so oferece as buscas.
     if (latitude === null && longitude === null) {
         return res.render('site/servicos', locals);
     }
