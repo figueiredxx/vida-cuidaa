@@ -1002,3 +1002,229 @@ select:focus-visible {
 .admin-body .formulario {
     max-width: 46rem;
 }
+
+/* ---------------------------------------------------------------------------
+   Pagina de servicos de saude (CNES)
+   --------------------------------------------------------------------------- */
+
+.servicos__intro {
+    max-width: 65ch;
+    margin-bottom: 1.5rem;
+}
+
+.servicos__erro {
+    padding: 0.75rem 1rem;
+    border-left: 4px solid var(--cor-erro);
+    background: var(--cor-fundo-card);
+    color: var(--cor-erro);
+    margin-bottom: 1.5rem;
+}
+
+.servicos__busca {
+    padding: 1.25rem;
+    background: var(--cor-fundo-card);
+    border: 1px solid var(--cor-borda);
+    border-radius: 8px;
+    margin-bottom: 2rem;
+}
+
+.filtros__campo--checkbox {
+    flex-direction: row;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.filtros__campo--checkbox label {
+    font-weight: normal;
+}
+
+.servicos__acoes {
+    margin-top: 1rem;
+}
+
+.servicos__aviso-permissao,
+.servicos__fonte {
+    font-size: 0.9rem;
+    color: var(--cor-sal-texto);
+    max-width: 65ch;
+}
+
+.servicos__status:not(:empty) {
+    margin-top: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    border-left: 3px solid var(--cor-sal);
+    background: var(--cor-papel);
+}
+
+/* RF28: quantas unidades o bairro escolhido tem, antes da lista. */
+.servicos__contagem {
+    margin-bottom: 1rem;
+    font-weight: 600;
+}
+
+.servicos__linha-reta {
+    max-width: 65ch;
+    margin-bottom: 1.5rem;
+    padding: 0.75rem 1rem;
+    border-left: 4px solid var(--cor-farol);
+    background: var(--cor-fundo-card);
+}
+
+.servicos__fonte {
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--cor-borda);
+}
+
+.servicos-lista {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    gap: 1rem;
+}
+
+.servicos-lista__item {
+    padding: 1rem 1.25rem;
+    background: var(--cor-fundo-card);
+    border: 1px solid var(--cor-borda);
+    border-left: 5px solid var(--cor-tinta);
+    border-radius: 8px;
+}
+
+/* RN20: quem nao atende pelo SUS precisa de identificacao visual distinta. A
+   diferenca nao fica so na cor — a borda e' tracejada e o selo diz o motivo,
+   para quem nao distingue as cores tambem perceber. */
+.servicos-lista__item--particular {
+    border-left-style: dashed;
+    border-left-color: var(--cor-farol-escuro);
+}
+
+.servicos-lista__nome {
+    font-size: 1.1rem;
+    margin: 0 0 0.25rem;
+}
+
+.servicos-lista__distancia {
+    font-weight: 600;
+    color: var(--cor-tinta);
+    margin: 0 0 0.5rem;
+}
+
+.servicos-lista__selo {
+    display: inline-block;
+    margin: 0 0 0.5rem;
+    padding: 0.15rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.servicos-lista__selo--sus {
+    background: var(--cor-tinta);
+    color: #fff;
+}
+
+.servicos-lista__selo--particular {
+    background: var(--cor-farol-escuro);
+    color: #fff;
+}
+
+.servicos-lista__tipo,
+.servicos-lista__endereco,
+.servicos-lista__telefone,
+.servicos-lista__turno {
+    margin: 0 0 0.25rem;
+    font-size: 0.95rem;
+}
+
+.servicos-lista__tipo,
+.servicos-lista__turno {
+    color: var(--cor-sal-texto);
+}
+
+.servicos-lista__rota {
+    display: inline-block;
+    margin-top: 0.5rem;
+    font-weight: 600;
+}
+
+/* Mapa das unidades (RF29). O Leaflet exige altura explicita no container. */
+.servicos__mapa-secao {
+    margin-bottom: 2rem;
+}
+
+.servicos__mapa {
+    height: 420px;
+    margin-bottom: 0.75rem;
+    border: 1px solid var(--cor-borda);
+    border-radius: 4px;
+}
+
+.servicos__mapa-aviso {
+    max-width: 65ch;
+    margin-bottom: 1rem;
+}
+
+.servicos__mapa-indisponivel:not([hidden]) {
+    padding: 0.75rem 1rem;
+    border-left: 4px solid var(--cor-farol);
+    background: var(--cor-fundo-card);
+}
+
+.servicos__mapa-legenda,
+.servicos__mapa-credito {
+    font-size: 0.9rem;
+    color: var(--cor-sal-texto);
+}
+
+/* A chave repete a cor do marcador, mas a legenda tambem diz por extenso o que
+   cada uma significa: a distincao nao pode depender so de cor. */
+.servicos__mapa-chave {
+    display: inline-block;
+    width: 0.9rem;
+    height: 0.9rem;
+    margin: 0 0.25rem 0 1rem;
+    border-radius: 50%;
+    vertical-align: middle;
+}
+
+.servicos__mapa-chave:first-child {
+    margin-left: 0;
+}
+
+.servicos__mapa-chave--sus {
+    border: 3px solid #0b5d3b;
+    background: #1f9d63;
+}
+
+.servicos__mapa-chave--particular {
+    border: 3px dashed #8a4b00;
+    background: #f0a04b;
+}
+
+.mapa-balao p {
+    margin: 0.25rem 0;
+}
+
+.mapa-balao__sus {
+    font-weight: 600;
+}
+
+.mapa-balao__particular {
+    font-weight: 600;
+    font-style: italic;
+}
+
+@media (max-width: 480px) {
+    .servicos__mapa {
+        height: 300px;
+    }
+
+    .servicos__busca {
+        padding: 1rem;
+    }
+
+    .servicos-lista__item {
+        padding: 0.85rem 1rem;
+    }
+}

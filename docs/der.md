@@ -12,7 +12,7 @@ Notação de cardinalidade do Mermaid:
 | `\|o` | zero ou um |
 | `o{` | zero ou muitos |
 
-O banco tem **dez tabelas**. Todas as chaves primárias são `INTEGER PRIMARY KEY
+O banco tem **doze tabelas**. Todas as chaves primárias são `INTEGER PRIMARY KEY
 AUTOINCREMENT` (o `rowid` do SQLite).
 
 ```mermaid
@@ -111,6 +111,28 @@ erDiagram
         TEXT termo UK
         TEXT definicao
     }
+
+    UNIDADE_SAUDE {
+        INTEGER id PK
+        TEXT codigo_cnes UK "codigo do estabelecimento no CNES"
+        TEXT nome
+        TEXT logradouro
+        TEXT numero
+        TEXT bairro "valor cru do CNES, preservado para auditoria"
+        TEXT bairro_normalizado "nome corrigido, usado na busca e na exibicao"
+        TEXT telefone
+        REAL latitude
+        REAL longitude
+        INTEGER tipo_unidade "codigo do tipo no CNES"
+        TEXT tipo_descricao "descricao oficial do tipo, de /cnes/tipounidades"
+        INTEGER atende_sus "0 ou 1"
+        TEXT turno_atendimento
+    }
+
+    EXTRACAO_CNES {
+        INTEGER id PK
+        TEXT data_extracao "RN22 - exibida ao usuario em /servicos"
+    }
 ```
 
 ## Relacionamentos e por que cada um é assim
@@ -127,7 +149,7 @@ erDiagram
 | `duvida` → `resposta_duvida` | 1 : 0..1 | `duvida_id` é `UNIQUE`: uma dúvida recebe no máximo uma resposta oficial. `ON DELETE CASCADE`. |
 | `usuario` → `resposta_duvida` | 1 : N | Identifica **quem respondeu** (admin ou editor) — nunca quem perguntou. |
 
-## Duas ausências propositais de relacionamento
+## Três ausências propositais de relacionamento
 
 Estas não são esquecimento de modelagem; são requisitos:
 
@@ -136,6 +158,20 @@ Estas não são esquecimento de modelagem; são requisitos:
   apenas do lado da resposta, para saber qual administrador respondeu.
 - **`glossario` é uma tabela isolada, sem relacionamento.** É um verbete independente,
   sem ligação com categoria ou conteúdo — simplicidade deliberada.
+- **`extracao_cnes` guarda uma linha só, sem relacionamento.** Registra a data da
+  extração da base (RN22). Não se liga a `unidade_saude` porque a base é substituída
+  inteira a cada importação: a data vale para a carga toda, não para cada unidade.
+- **`unidade_saude` também é isolada.** É um espelho local de uma base pública externa
+  (o CNES, do Ministério da Saúde), recarregado inteiro a cada importação
+  (`npm run importar:cnes`). Ligá-la a `categoria` ou `conteudo` criaria uma dependência
+  entre dado nosso e dado de terceiro que a recarga quebraria. `codigo_cnes` é `UNIQUE`
+  para a importação ser idempotente.
+- **`bairro` e `bairro_normalizado` convivem de propósito.** O CNES trunca o nome do
+  bairro em 20 caracteres e traz erro de digitação, abreviação e subdivisão informal —
+  95 grafias para cerca de 63 bairros. A busca e a tela usam `bairro_normalizado`,
+  corrigido na importação pela tabela de `src/services/bairro.service.js`; o valor cru
+  fica em `bairro` para a origem do dado continuar verificável. Não é redundância: uma
+  coluna é o que o Ministério publicou, a outra é o que a plataforma afirma.
 
 Vale registrar também que **nenhuma tabela armazena dado de saúde de indivíduo**
 (RNF09). `tentativa_quiz` guarda apenas acertos e total, sem as respostas

@@ -30,6 +30,64 @@ Convenção: `RF` = requisito funcional, `RNF` = requisito não funcional.
 | RF17 | Visitante percorre uma trilha por categoria: os artigos publicados daquela categoria em ordem de leitura, com progresso, e o quiz da categoria liberado somente depois que todos forem lidos | Sprint 7 (`c1cd49c`) | `categoria.controller.js` → `categoria.service.js`; `views/site/categoria.ejs` e `categorias.ejs`; `public/js/trilha-categoria.js` (reusa a chave `progresso-leitura-lidos` do `localStorage`) | Acessar `/categorias/prevencao-ists`, ler os 3 artigos e voltar — o cadeado do quiz some. Ver `tests/categoria.service.test.js` |
 | RF18 | Questão de quiz pode apontar o artigo de origem; no resultado, a questão errada exibe "Reveja: <artigo>" com link para o conteúdo | Sprint 7 (`c1cd49c`) | `schema.sql` (`questao.conteudo_id`), `quiz.repository.js#buscarGabarito`, `quiz-player.service.js#corrigir`, `public/js/quiz.js`; migração idempotente em `database/migrar.js` (`npm run migrar`), necessária porque `schema.sql` usa `CREATE TABLE IF NOT EXISTS` e não altera tabela existente | Errar uma questão em `/quiz/4` e conferir o link; ver `tests/quiz-player.service.test.js` e `tests/quiz-admin.service.test.js` |
 
+| RF24 | Solicitar autorização de acesso à geolocalização do dispositivo | Sprint 8 | `public/js/servicos.js` (`navigator.geolocation.getCurrentPosition`), `views/site/servicos.ejs` | Abrir `/servicos` e clicar em "Usar minha localização" — o navegador pede permissão |
+| RF25 | Calcular a distância e listar os estabelecimentos ordenados por proximidade | Sprint 8 | `unidade-saude.service.js#calcularDistanciaKm` (Haversine) e `#buscarProximas`; `unidade-saude.repository.js` | `/servicos?lat=-3.1302&lon=-60.0233`; ver `tests/unidade-saude.service.test.js` |
+| RF26 | Exibir nome, endereço, bairro, telefone, tipo de unidade, turno, indicação de atendimento pelo SUS e distância em linha reta | Sprint 8 | `views/site/servicos.ejs` | Conferir um item da lista em `/servicos` com coordenada |
+| RF27 | Permitir filtrar por tipo de unidade e por atendimento pelo SUS | Sprint 8 | `unidade-saude.repository.js#montarFiltros/listarComFiltros`, `#listarTiposDisponiveis` | `/servicos?lat=..&lon=..&tipo=5` e `&sus=nao` |
+| RF28 | Permitir busca por bairro quando a geolocalização for negada ou indisponível | Sprint 8 | `bairro.service.js#normalizarBairro` (tabela de correção), `unidade-saude.service.js#listarPorBairro`/`#listarBairrosDisponiveis`, `unidade-saude.repository.js#montarFiltros`, coluna `unidade_saude.bairro_normalizado`, seletor em `views/site/servicos.ejs` | `/servicos?bairro=Centro`; negar a permissão de localização leva o foco ao seletor. Ver `tests/bairro.service.test.js` |
+| RF29 | Exibir os estabelecimentos em mapa interativo, sincronizado com os filtros aplicados à listagem | Sprint 8 | `public/js/mapa-servicos.js` (Leaflet + OpenStreetMap), seção do mapa em `views/site/servicos.ejs`, CSP em `app.js` | `/servicos?bairro=Centro` — o mapa traz um marcador por item da lista. Ver `tests/servicos.view.test.js` |
+| RF30 | Permitir abrir a rota até o estabelecimento em aplicativo de mapas externo | Sprint 8 | `views/site/servicos.ejs` (link `maps/dir/?api=1&destination=`) | Clicar em "Ver rota até…" em qualquer item |
+
+## Regras de negócio do módulo de localização
+
+| ID | Regra | Onde está garantido |
+|---|---|---|
+| RN19 | Estabelecimentos vindos do CNES, restritos aos ativos e com coordenada válida | `scripts/extrair-cnes.js#ehUtil` (descarta sem latitude/longitude; a consulta já pede `status=1`) |
+| RN20 | Quem não atende pelo SUS é exibido com identificação visual distinta | `views/site/servicos.ejs` (selo "Não atende pelo SUS") e `main.css` (`.servicos-lista__item--particular`, borda tracejada — a distinção não depende só de cor) |
+| RN21 | Toda distância identificada como medida em linha reta | `views/site/servicos.ejs`: o texto "em linha reta" acompanha cada distância, além da nota no topo da lista |
+| RN22 | A base registra a data de sua extração, exibida ao usuário | `extracao_cnes` no `schema.sql`; `extrair-cnes.js` grava `extraido_em` no JSON, `importar-cnes.js` registra, rodapé de `/servicos` exibe |
+| RN23 | O sistema não informa disponibilidade de medicamentos ou insumos | Não há campo de medicamento ou insumo em `unidade_saude` nem na página |
+
+### Nota sobre o mapa (RF29)
+
+O requisito pede o mapa **sincronizado com os filtros aplicados à listagem**. Em vez de
+consultar o banco uma segunda vez para o mapa, cada item da lista carrega a própria
+coordenada em atributos `data-*`, e o `mapa-servicos.js` monta os marcadores a partir
+desses itens. Não existe segunda consulta, segundo filtro nem segunda ordenação: mapa e
+lista são o mesmo resultado desenhado de dois jeitos, e não há como divergirem.
+
+O Leaflet é servido pelo próprio site (`src/public/vendor/leaflet`, versão 1.9.4), e não
+por CDN. O motivo é o `Content-Security-Policy` do helmet, que traz `script-src 'self'`:
+aceitar script de CDN exigiria abrir essa diretiva para um domínio de terceiro. Servindo
+local, a única abertura necessária é `img-src` para `https://*.tile.openstreetmap.org`,
+de onde vêm os ladrilhos. Nenhum script de terceiro executa na plataforma.
+
+O mapa é melhoria progressiva: se o Leaflet não carregar, ou se os ladrilhos falharem
+(testado com o domínio do OpenStreetMap bloqueado), o mapa se esconde, um aviso em
+`role="status"` explica o que houve e a listagem permanece completa.
+
+A atribuição ao OpenStreetMap aparece duas vezes de propósito: no controle do Leaflet,
+exigido pela licença ODbL, e em parágrafo estático no HTML, que sobrevive à falha do
+mapa. Um teste garante que a menção não seja removida por descuido.
+
+### Nota sobre o nome do bairro (RF28)
+
+O CNES não devolve o bairro em forma utilizável: os 659 estabelecimentos de Manaus
+chegam com **95 grafias distintas** para cerca de 63 bairros, somando truncamento em
+20 caracteres (`NOSSA SENHORA DAS GR`), erro de digitação (`ADRIANNOPOLIS`, `CHPADA`),
+abreviação (`N SRA DAS GRACAS`) e subdivisão informal (`COMPENSA I/II/III`).
+
+A correção fica em `src/services/bairro.service.js`, cobrindo os 95 valores. O valor
+cru permanece na coluna `unidade_saude.bairro` e o corrigido em `bairro_normalizado`,
+de modo que a origem do dado continue auditável. Um teste percorre
+`database/cnes-manaus.json` e falha se uma reextração trouxer valor fora da tabela —
+a falha aparece no `npm test`, não na tela do usuário.
+
+Quatro valores usados pelo CNES não constam da divisão oficial de bairros de Manaus
+(`Km 08`, `Nossa Senhora de Fátima`, `Ponta Pelada` e `Zona Rural`). Estão marcados no
+código e mantidos apenas com a grafia corrigida: descartá-los esconderia unidades que
+atendem gente de verdade.
+
 ## Requisitos não funcionais
 
 | ID | Requisito | Onde está garantido |
@@ -60,14 +118,18 @@ usuário final — nenhum desses itens existe no código, por decisão registrad
 - Sessão de admin usa `MemoryStore` do Express (não sobrevive a restart do processo em
   produção). Fase de deploy prevê `connect-sqlite3` para persistir sessão — ainda não
   integrado.
-- **A numeração de requisitos deste documento não coincide com a usada no quadro do
-  Trello e no Documento de Requisitos formal.** Aqui os funcionais vão até RF18 e os
-  não funcionais até RNF13, e não existe a categoria `RN` (regras de negócio). O quadro
-  cita RF19, RNF14 e RN01/RN08/RN09/RN10, que não têm correspondente aqui — e alguns IDs
-  batem em requisitos diferentes (o card da trilha cita RF14/RF15, que neste documento
-  são o aviso do rodapé e os controles de acessibilidade). Como este documento existe
-  justamente para provar a rastreabilidade entre o combinado e o programado, é preciso
-  eleger uma numeração oficial e alinhar a outra antes da entrega.
+- **A numeração deste documento ainda não coincide com a do Documento de Requisitos
+  formal.** O documento formal (anexo ao card "Requisitos Gerais" do Trello, em
+  `vida-cuida-requisitos-completos`) vai até RF36 e RN23. As linhas RF01 a RF18 acima
+  usam a numeração antiga desta tabela; as linhas RF24 a RF30 e RN19 a RN23, acrescentadas
+  na Sprint 8, já usam a numeração oficial. **Falta conciliar o trecho RF01–RF18**, em que
+  alguns IDs apontam para requisitos diferentes nos dois documentos (aqui RF14 e RF15 são o
+  aviso do rodapé e os controles de acessibilidade; no documento formal são o indicador de
+  progresso). Como esta tabela existe para provar rastreabilidade, a conciliação precisa
+  acontecer antes da entrega.
+- **O documento formal afirma, nas "Notas de revisão", que o RNF14 (suíte de testes)
+  permanece descumprido.** Não é mais o caso: `npm test` roda 77 testes. A nota foi
+  escrita antes da Sprint 8 e a própria seção manda apagá-la antes da entrega.
 
 - Rate limit hoje é só por sessão (`rate-limit.middleware.js`), aplicado apenas em
   `POST /duvidas`. `POST /admin/login` não tem proteção contra força bruta. Fase de

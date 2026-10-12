@@ -5,6 +5,7 @@ const categoriaController = require('../controllers/categoria.controller');
 const quizController = require('../controllers/quiz.controller');
 const duvidaController = require('../controllers/duvida.controller');
 const glossarioController = require('../controllers/glossario.controller');
+const unidadeSaudeController = require('../controllers/unidade-saude.controller');
 const { limitarPorSessao } = require('../middlewares/rate-limit.middleware');
 
 const router = express.Router();
@@ -24,6 +25,8 @@ router.post(
 );
 
 router.get('/glossario', glossarioController.exibir);
+
+router.get('/servicos', unidadeSaudeController.exibir);
 
 router.get('/sobre', siteController.sobre);
 

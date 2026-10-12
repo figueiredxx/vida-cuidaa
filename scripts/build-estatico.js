@@ -17,6 +17,7 @@ const glossarioService = require('../src/services/glossario.service');
 const quizRepository = require('../src/repositories/quiz.repository');
 const quizPlayerService = require('../src/services/quiz-player.service');
 const duvidaService = require('../src/services/duvida.service');
+const unidadeSaudeService = require('../src/services/unidade-saude.service');
 
 const RAIZ = path.join(__dirname, '..');
 const DIR_VIEWS = path.join(RAIZ, 'src', 'views', 'site');
@@ -57,6 +58,18 @@ function neutralizarFormularioDuvida(html) {
     );
 }
 
+// A pagina de servicos depende do servidor para calcular as distancias, entao na
+// vitrine estatica ela vira so a explicacao do recurso. Sem isso o item "Servicos"
+// do menu levaria a uma pagina quebrada no GitHub Pages.
+function neutralizarBuscaServicos(html) {
+    return html.replace(
+        /<form method="GET" action="\/servicos"[\s\S]*?<\/section>/,
+        '<p class="aviso-estatico">A busca por unidades de saúde, por localização ou ' +
+            'por bairro, depende do servidor e está disponível apenas na versão ' +
+            'publicada com o backend ativo.</p></section>'
+    );
+}
+
 function aplicarBasePath(html) {
     if (!BASE_PATH) return html;
     return html.replace(/(href|src|action)="\/(?!\/)/g, `$1="${BASE_PATH}/`);
@@ -83,7 +96,9 @@ function copiarDiretorio(origem, destino) {
 }
 
 function copiarAssets() {
-    for (const pasta of ['css', 'js', 'fonts']) {
+    // vendor entra por causa do Leaflet: a pagina de servicos pede o arquivo mesmo
+    // na vitrine estatica, onde o mapa fica sem marcador por falta de servidor.
+    for (const pasta of ['css', 'js', 'fonts', 'vendor']) {
         const origem = path.join(DIR_PUBLIC, pasta);
         if (fs.existsSync(origem)) {
             copiarDiretorio(origem, path.join(DIR_SAIDA, pasta));
@@ -181,6 +196,23 @@ async function gerarDuvidas() {
     escreverPagina('duvidas', neutralizarFormularioDuvida(html));
 }
 
+async function gerarServicos() {
+    const html = await renderizar('servicos', {
+        titulo: 'Serviços de saúde',
+        apenasSus: true,
+        tipo: '',
+        bairro: '',
+        tipos: unidadeSaudeService.listarTiposDisponiveis(),
+        bairros: unidadeSaudeService.listarBairrosDisponiveis({ apenasSus: true }),
+        dataExtracao: unidadeSaudeService.buscarDataExtracao(),
+        latitude: null,
+        longitude: null,
+        unidades: null,
+        erro: null,
+    });
+    escreverPagina('servicos', neutralizarBuscaServicos(html));
+}
+
 async function gerar404() {
     const html = await renderizar('404', { titulo: 'Página não encontrada' });
     fs.writeFileSync(path.join(DIR_SAIDA, '404.html'), aplicarBasePath(injetarAvisoEstatico(html)), 'utf8');
@@ -201,6 +233,7 @@ async function main() {
     await gerarGlossario();
     await gerarQuizzes();
     await gerarDuvidas();
+    await gerarServicos();
     await gerar404();
 
     console.log('\nVitrine estática gerada em', path.relative(RAIZ, DIR_SAIDA));

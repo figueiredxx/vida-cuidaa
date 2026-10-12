@@ -46,3 +46,29 @@ html.alto-contraste a:focus-visible,
 html.alto-contraste button:focus-visible {
     outline-color: #ffd600;
 }
+
+html.alto-contraste .servicos__busca,
+html.alto-contraste .servicos-lista__item,
+html.alto-contraste .servicos__linha-reta,
+html.alto-contraste .servicos__status:not(:empty) {
+    background: #000;
+    border: 2px solid #fff;
+}
+
+html.alto-contraste .servicos-lista__item--particular {
+    border-style: dashed;
+}
+
+html.alto-contraste .servicos-lista__selo--sus,
+html.alto-contraste .servicos-lista__selo--particular {
+    background: #ffd600;
+    color: #000;
+}
+
+html.alto-contraste .servicos-lista__distancia,
+html.alto-contraste .servicos-lista__tipo,
+html.alto-contraste .servicos-lista__turno,
+html.alto-contraste .servicos__aviso-permissao,
+html.alto-contraste .servicos__fonte {
+    color: #fff;
+}

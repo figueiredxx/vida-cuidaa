@@ -65,6 +65,44 @@ Com `NODE_ENV=production`, a aplicação automaticamente ativa `trust proxy` e m
 de sessão como `secure` — por isso o HTTPS via Nginx/Let's Encrypt precisa estar na frente
 antes de ativar produção, senão o cookie de sessão não é enviado pelo navegador.
 
+## Unidades de saúde (CNES)
+
+A página `/servicos` lista unidades de saúde de Manaus ordenadas pela distância até
+quem acessa, com filtro por bairro, por tipo de unidade e por atendimento pelo SUS.
+Quem não quiser (ou não puder) compartilhar a localização escolhe o bairro na lista. Os dados vêm
+da API de dados abertos do Ministério da Saúde (CNES). A coleta **não acontece em
+tempo de execução**: o site lê a tabela `unidade_saude` do próprio banco, para não
+depender de a API externa estar no ar durante a apresentação.
+
+```bash
+npm run extrair:cnes    # consulta a API e grava database/cnes-manaus.json
+npm run migrar          # cria a tabela unidade_saude em bancos já existentes
+npm run importar:cnes   # carrega o JSON na tabela
+```
+
+Quem clonar o repositório roda só os dois últimos: o JSON já está versionado.
+A extração só precisa ser repetida quando se quiser atualizar os dados.
+
+Detalhes da API, levantados na marra porque a documentação é escassa:
+
+- Base: `https://apidadosabertos.saude.gov.br/cnes/estabelecimentos` (sem prefixo de versão)
+- Manaus é o código IBGE `130260`
+- `limit` tem teto de 20 — paginar por `offset` é obrigatório (~87 requisições)
+- Dos 1.735 estabelecimentos ativos, 659 são de tipos que atendem ao público e
+  todos têm coordenada; 284 atendem pelo SUS
+- A listagem traz só o **código** do tipo de unidade; a descrição oficial vem do
+  endpoint `/cnes/tipounidades`
+- A distância é calculada por Haversine, **em linha reta** — não é distância de
+  percurso, e a página diz isso em cada item (RN21)
+- O mapa usa **Leaflet 1.9.4 servido pelo próprio site** (`src/public/vendor/leaflet`),
+  não por CDN: o CSP do helmet traz `script-src 'self'` e aceitar CDN exigiria abrir a
+  diretiva para terceiro. A única abertura é `img-src` para os ladrilhos do
+  OpenStreetMap. Para atualizar a biblioteca, baixe de `https://unpkg.com/leaflet@<versão>/dist/`
+- O campo de bairro vem **truncado em 20 caracteres** (`NOSSA SENHORA DAS GR`) e ainda
+  traz erro de digitação, abreviação e subdivisão informal: 95 grafias para cerca de
+  63 bairros. A correção fica em `src/services/bairro.service.js`, e um teste quebra
+  se uma reextração trouxer valor fora da tabela
+
 ## Quadro do Trello
 
 Ferramenta de apoio da dupla para consultar e atualizar o quadro de tarefas do TCC
@@ -121,7 +159,7 @@ src/
   middlewares/{auth,error-handler,rate-limit}.js
   views/{partials,site,admin}/
   public/{css,js,img}/
-database/{schema.sql,seed.js,database.sqlite}
+database/{schema.sql,seed.js,migrar.js,importar-cnes.js,cnes-manaus.json,database.sqlite}
 deploy/{plataforma.service,nginx.conf}
 docs/
   der.md                      -- diagrama entidade-relacionamento (Mermaid)

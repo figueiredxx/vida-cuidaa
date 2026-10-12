@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<%- include('../partials/head') %>
+<%# Leaflet servido pelo proprio site: o CSP de script e' 'self', e assim
+    continua sendo — nenhum script de terceiro executa nesta pagina. %>
+<link rel="stylesheet" href="/vendor/leaflet/leaflet.css">
+</head>
+<body>
+<%- include('../partials/header') %>
+
+<main id="conteudo-principal" class="container">
+    <h1>Serviços de saúde perto de você</h1>
+
+    <p class="servicos__intro">
+        Esta página lista estabelecimentos de saúde de Manaus cadastrados no
+        Cadastro Nacional de Estabelecimentos de Saúde (CNES), do Ministério da Saúde,
+        ordenados pela distância até onde você estiver.
+    </p>
+
+    <% if (erro) { %>
+        <p class="servicos__erro" role="alert"><%= erro %></p>
+    <% } %>
+
+    <section class="servicos__busca" aria-labelledby="titulo-busca">
+        <h2 id="titulo-busca">Encontrar unidades</h2>
+
+        <form method="GET" action="/servicos" class="filtros" id="form-servicos">
+            <%# A coordenada obtida pelo navegador viaja nestes campos ocultos, para
+                a lista continuar sendo montada no servidor e a URL ficar compartilhavel. %>
+            <input type="hidden" name="lat" id="campo-lat" value="<%= latitude === null ? '' : latitude %>">
+            <input type="hidden" name="lon" id="campo-lon" value="<%= longitude === null ? '' : longitude %>">
+
+            <%# RF28: a busca por bairro nao depende de geolocalizacao nenhuma. %>
+            <div class="filtros__campo">
+                <label for="bairro">Bairro</label>
+                <select id="bairro" name="bairro">
+                    <option value="">Qualquer bairro (usar minha localização)</option>
+                    <% bairros.forEach(function(b) { %>
+                        <option value="<%= b.bairro %>" <%= bairro === b.bairro ? 'selected' : '' %>>
+                            <%= b.bairro %> (<%= b.total %>)
+                        </option>
+                    <% }); %>
+                </select>
+            </div>
+
+            <div class="filtros__campo">
+                <label for="tipo">Tipo de unidade</label>
+                <select id="tipo" name="tipo">
+                    <option value="">Todos os tipos</option>
+                    <% tipos.forEach(function(t) { %>
+                        <option value="<%= t.codigo %>" <%= String(tipo) === String(t.codigo) ? 'selected' : '' %>>
+                            <%= t.descricao %>
+                        </option>
+                    <% }); %>
+                </select>
+            </div>
+
+            <div class="filtros__campo filtros__campo--checkbox">
+                <%# O valor 'nao' so e' enviado quando a pessoa desmarca a opcao,
+                    porque checkbox desmarcada nao vai no formulario. %>
+                <input type="checkbox" id="sus" name="sus" value="nao" <%= apenasSus ? '' : 'checked' %>>
+                <label for="sus">Mostrar também unidades que não atendem pelo SUS</label>
+            </div>
+
+            <button type="submit" class="botao-primario">Buscar</button>
+        </form>
+
+        <p class="servicos__acoes">
+            <button type="button" class="botao-primario" id="botao-localizacao">
+                Usar minha localização
+            </button>
+        </p>
+
+        <p class="servicos__aviso-permissao">
+            O navegador vai pedir permissão para acessar sua localização. Ela é usada
+            apenas para calcular as distâncias e não fica guardada em lugar nenhum.
+        </p>
+
+        <p class="servicos__status" id="status-localizacao" role="status" aria-live="polite"></p>
+    </section>
+
+    <%# RF29: o mapa so existe quando ha o que mostrar nele. %>
+    <% if (unidades && unidades.length > 0) { %>
+        <section class="servicos__mapa-secao" aria-labelledby="titulo-mapa">
+            <h2 id="titulo-mapa">Mapa das unidades</h2>
+
+            <p class="servicos__mapa-aviso">
+                O mapa é um complemento visual. <strong>A lista abaixo traz as mesmas
+                unidades</strong>, com todos os dados, e continua funcionando se o mapa
+                não carregar.
+            </p>
+
+            <%# Sem role="img": o Leaflet cria dentro do mapa controles que recebem
+                foco, e role="img" esconderia esses controles do leitor de tela sem
+                tirar o foco deles. A secao ja e' rotulada pelo h2, e o paragrafo
+                acima avisa que a lista traz o mesmo conteudo. %>
+            <div id="mapa-servicos"
+                 class="servicos__mapa"
+                 data-origem-lat="<%= latitude === null ? '' : latitude %>"
+                 data-origem-lon="<%= longitude === null ? '' : longitude %>"></div>
+
+            <p class="servicos__mapa-indisponivel" id="mapa-indisponivel" role="status" hidden>
+                Não foi possível carregar o mapa &mdash; ele depende de conexão com a
+                internet. A lista de unidades abaixo continua completa.
+            </p>
+
+            <p class="servicos__mapa-legenda">
+                <span class="servicos__mapa-chave servicos__mapa-chave--sus"></span>
+                Atende pelo SUS
+                <span class="servicos__mapa-chave servicos__mapa-chave--particular"></span>
+                Não atende pelo SUS (marcador com borda tracejada)
+            </p>
+
+            <%# Atribuicao exigida pela licenca do OpenStreetMap. O Leaflet tambem a
+                insere no canto do mapa; esta fica no HTML para existir mesmo quando o
+                mapa nao carrega. %>
+            <p class="servicos__mapa-credito">
+                Mapa: &copy; colaboradores do <a href="https://www.openstreetmap.org/copyright"
+                target="_blank" rel="noopener">OpenStreetMap</a>, sob licença ODbL.
+            </p>
+        </section>
+    <% } %>
+
+    <section aria-labelledby="titulo-resultado" id="resultado-servicos" tabindex="-1">
+        <h2 id="titulo-resultado">
+            <% if (bairro) { %>Unidades em <%= bairro %><% } else { %>Unidades encontradas<% } %>
+        </h2>
+
+        <% if (unidades === null) { %>
+            <p class="estado-vazio">
+                Use o botão acima para buscar as unidades mais próximas de você. Se
+                preferir não compartilhar sua localização, escolha um bairro na lista
+                e clique em <strong>Buscar</strong>.
+            </p>
+        <% } else if (unidades.length === 0) { %>
+            <p class="estado-vazio">
+                Nenhuma unidade encontrada com os filtros escolhidos. Tente outro bairro,
+                outro tipo de unidade ou marque a opção de mostrar unidades que não
+                atendem pelo SUS.
+            </p>
+        <% } else { %>
+            <% if (bairro) { %>
+                <p class="servicos__contagem">
+                    <%= unidades.length %> <%= unidades.length === 1 ? 'unidade' : 'unidades' %>
+                    <%= unidades.length === 1 ? 'encontrada' : 'encontradas' %> em <%= bairro %>.
+                </p>
+            <% } %>
+
+            <% if (unidades[0].distancia_km !== undefined) { %>
+                <p class="servicos__linha-reta">
+                    As distâncias são medidas <strong>em linha reta</strong>, não pelo caminho
+                    a percorrer. Em Manaus, igarapés e o traçado das ruas costumam tornar o
+                    percurso real bem maior do que o número mostrado aqui.
+                </p>
+            <% } %>
+
+            <ol class="servicos-lista">
+                <% unidades.forEach(function(unidade) { %>
+                    <%# Os data-* alimentam o mapa. Virem daqui, e nao de um JSON a
+                        parte, garante que marcador e item da lista nunca divirjam. %>
+                    <li class="servicos-lista__item <%= unidade.atende_sus ? '' : 'servicos-lista__item--particular' %>"
+                        data-lat="<%= unidade.latitude %>"
+                        data-lon="<%= unidade.longitude %>"
+                        data-nome="<%= unidade.nome %>"
+                        data-sus="<%= unidade.atende_sus ? 1 : 0 %>"
+                        data-tipo="<%= unidade.tipo_descricao || '' %>"
+                        data-endereco="<%= unidade.logradouro || '' %><%= unidade.numero ? ', ' + unidade.numero : '' %>"
+                        data-bairro="<%= unidade.bairro_normalizado || unidade.bairro || '' %>"
+                        data-telefone="<%= unidade.telefone || '' %>">
+                        <h3 class="servicos-lista__nome"><%= unidade.nome %></h3>
+
+                        <% if (unidade.distancia_km !== undefined) { %>
+                            <p class="servicos-lista__distancia">
+                                <%= unidade.distancia_km.toFixed(1).replace('.', ',') %> km em linha reta
+                            </p>
+                        <% } %>
+
+                        <% if (unidade.atende_sus) { %>
+                            <p class="servicos-lista__selo servicos-lista__selo--sus">Atende pelo SUS</p>
+                        <% } else { %>
+                            <p class="servicos-lista__selo servicos-lista__selo--particular">Não atende pelo SUS</p>
+                        <% } %>
+
+                        <% if (unidade.tipo_descricao) { %>
+                            <p class="servicos-lista__tipo"><%= unidade.tipo_descricao %></p>
+                        <% } %>
+
+                        <p class="servicos-lista__endereco">
+                            <%= unidade.logradouro %><%= unidade.numero ? ', ' + unidade.numero : '' %>
+                            <%# Exibe o nome corrigido; o valor cru do CNES fica no banco. %>
+                            <% if (unidade.bairro_normalizado || unidade.bairro) { %>
+                                &mdash; <%= unidade.bairro_normalizado || unidade.bairro %>
+                            <% } %>
+                        </p>
+
+                        <% if (unidade.telefone) { %>
+                            <p class="servicos-lista__telefone">
+                                Telefone:
+                                <a href="tel:<%= unidade.telefone.replace(/\D/g, '') %>"><%= unidade.telefone %></a>
+                            </p>
+                        <% } %>
+
+                        <% if (unidade.turno_atendimento) { %>
+                            <p class="servicos-lista__turno"><%= unidade.turno_atendimento %></p>
+                        <% } %>
+
+                        <%# RF30: abrir a rota em aplicativo de mapas externo. %>
+                        <p>
+                            <a class="servicos-lista__rota"
+                               href="https://www.google.com/maps/dir/?api=1&amp;destination=<%= unidade.latitude %>,<%= unidade.longitude %>"
+                               target="_blank" rel="noopener">
+                                Ver rota até <%= unidade.nome %> (abre em nova aba)
+                            </a>
+                        </p>
+                    </li>
+                <% }); %>
+            </ol>
+        <% } %>
+    </section>
+
+    <% if (dataExtracao) { %>
+        <p class="servicos__fonte">
+            Fonte: Cadastro Nacional de Estabelecimentos de Saúde (CNES), Ministério da Saúde.
+            Dados extraídos em <%= dataExtracao.split('-').reverse().join('/') %>.
+            As informações podem ter mudado desde a extração &mdash; confirme por telefone antes de se deslocar.
+        </p>
+    <% } %>
+</main>
+
+<%- include('../partials/footer') %>
+<script src="/js/acessibilidade.js"></script>
+<script src="/js/servicos.js"></script>
+<script src="/vendor/leaflet/leaflet.js"></script>
+<script src="/js/mapa-servicos.js"></script>
+</body>
+</html>

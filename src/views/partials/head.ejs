@@ -1,22 +1,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title><%= titulo %> | Vida Cuida</title>
-<script>
-(function () {
-    try {
-        var fonte = localStorage.getItem('acessibilidade-fonte');
-        var contraste = localStorage.getItem('acessibilidade-contraste');
-        if (fonte === 'grande' || fonte === 'enorme') {
-            document.documentElement.classList.add('fonte-' + fonte);
-        }
-        if (contraste === 'on') {
-            document.documentElement.classList.add('alto-contraste');
-        }
-    } catch (erro) {
-        // localStorage pode estar indisponivel (modo privado); segue com o padrao.
-    }
-})();
-</script>
+<script src="/js/preferencias.js"></script>
 <link rel="stylesheet" href="/css/reset.css">
 <link rel="stylesheet" href="/css/main.css">
 <link rel="stylesheet" href="/css/acessibilidade.css">
