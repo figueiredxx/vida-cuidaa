@@ -94,6 +94,10 @@ Detalhes da API, levantados na marra porque a documentação é escassa:
   endpoint `/cnes/tipounidades`
 - A distância é calculada por Haversine, **em linha reta** — não é distância de
   percurso, e a página diz isso em cada item (RN21)
+- O mapa usa **Leaflet 1.9.4 servido pelo próprio site** (`src/public/vendor/leaflet`),
+  não por CDN: o CSP do helmet traz `script-src 'self'` e aceitar CDN exigiria abrir a
+  diretiva para terceiro. A única abertura é `img-src` para os ladrilhos do
+  OpenStreetMap. Para atualizar a biblioteca, baixe de `https://unpkg.com/leaflet@<versão>/dist/`
 - O campo de bairro vem **truncado em 20 caracteres** (`NOSSA SENHORA DAS GR`) e ainda
   traz erro de digitação, abreviação e subdivisão informal: 95 grafias para cerca de
   63 bairros. A correção fica em `src/services/bairro.service.js`, e um teste quebra

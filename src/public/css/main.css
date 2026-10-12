@@ -1148,7 +1148,78 @@ select:focus-visible {
     font-weight: 600;
 }
 
+/* Mapa das unidades (RF29). O Leaflet exige altura explicita no container. */
+.servicos__mapa-secao {
+    margin-bottom: 2rem;
+}
+
+.servicos__mapa {
+    height: 420px;
+    margin-bottom: 0.75rem;
+    border: 1px solid var(--cor-borda);
+    border-radius: 4px;
+}
+
+.servicos__mapa-aviso {
+    max-width: 65ch;
+    margin-bottom: 1rem;
+}
+
+.servicos__mapa-indisponivel:not([hidden]) {
+    padding: 0.75rem 1rem;
+    border-left: 4px solid var(--cor-farol);
+    background: var(--cor-fundo-card);
+}
+
+.servicos__mapa-legenda,
+.servicos__mapa-credito {
+    font-size: 0.9rem;
+    color: var(--cor-sal-texto);
+}
+
+/* A chave repete a cor do marcador, mas a legenda tambem diz por extenso o que
+   cada uma significa: a distincao nao pode depender so de cor. */
+.servicos__mapa-chave {
+    display: inline-block;
+    width: 0.9rem;
+    height: 0.9rem;
+    margin: 0 0.25rem 0 1rem;
+    border-radius: 50%;
+    vertical-align: middle;
+}
+
+.servicos__mapa-chave:first-child {
+    margin-left: 0;
+}
+
+.servicos__mapa-chave--sus {
+    border: 3px solid #0b5d3b;
+    background: #1f9d63;
+}
+
+.servicos__mapa-chave--particular {
+    border: 3px dashed #8a4b00;
+    background: #f0a04b;
+}
+
+.mapa-balao p {
+    margin: 0.25rem 0;
+}
+
+.mapa-balao__sus {
+    font-weight: 600;
+}
+
+.mapa-balao__particular {
+    font-weight: 600;
+    font-style: italic;
+}
+
 @media (max-width: 480px) {
+    .servicos__mapa {
+        height: 300px;
+    }
+
     .servicos__busca {
         padding: 1rem;
     }

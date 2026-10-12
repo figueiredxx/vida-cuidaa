@@ -35,6 +35,7 @@ Convenção: `RF` = requisito funcional, `RNF` = requisito não funcional.
 | RF26 | Exibir nome, endereço, bairro, telefone, tipo de unidade, turno, indicação de atendimento pelo SUS e distância em linha reta | Sprint 8 | `views/site/servicos.ejs` | Conferir um item da lista em `/servicos` com coordenada |
 | RF27 | Permitir filtrar por tipo de unidade e por atendimento pelo SUS | Sprint 8 | `unidade-saude.repository.js#montarFiltros/listarComFiltros`, `#listarTiposDisponiveis` | `/servicos?lat=..&lon=..&tipo=5` e `&sus=nao` |
 | RF28 | Permitir busca por bairro quando a geolocalização for negada ou indisponível | Sprint 8 | `bairro.service.js#normalizarBairro` (tabela de correção), `unidade-saude.service.js#listarPorBairro`/`#listarBairrosDisponiveis`, `unidade-saude.repository.js#montarFiltros`, coluna `unidade_saude.bairro_normalizado`, seletor em `views/site/servicos.ejs` | `/servicos?bairro=Centro`; negar a permissão de localização leva o foco ao seletor. Ver `tests/bairro.service.test.js` |
+| RF29 | Exibir os estabelecimentos em mapa interativo, sincronizado com os filtros aplicados à listagem | Sprint 8 | `public/js/mapa-servicos.js` (Leaflet + OpenStreetMap), seção do mapa em `views/site/servicos.ejs`, CSP em `app.js` | `/servicos?bairro=Centro` — o mapa traz um marcador por item da lista. Ver `tests/servicos.view.test.js` |
 | RF30 | Permitir abrir a rota até o estabelecimento em aplicativo de mapas externo | Sprint 8 | `views/site/servicos.ejs` (link `maps/dir/?api=1&destination=`) | Clicar em "Ver rota até…" em qualquer item |
 
 ## Regras de negócio do módulo de localização
@@ -46,6 +47,28 @@ Convenção: `RF` = requisito funcional, `RNF` = requisito não funcional.
 | RN21 | Toda distância identificada como medida em linha reta | `views/site/servicos.ejs`: o texto "em linha reta" acompanha cada distância, além da nota no topo da lista |
 | RN22 | A base registra a data de sua extração, exibida ao usuário | `extracao_cnes` no `schema.sql`; `extrair-cnes.js` grava `extraido_em` no JSON, `importar-cnes.js` registra, rodapé de `/servicos` exibe |
 | RN23 | O sistema não informa disponibilidade de medicamentos ou insumos | Não há campo de medicamento ou insumo em `unidade_saude` nem na página |
+
+### Nota sobre o mapa (RF29)
+
+O requisito pede o mapa **sincronizado com os filtros aplicados à listagem**. Em vez de
+consultar o banco uma segunda vez para o mapa, cada item da lista carrega a própria
+coordenada em atributos `data-*`, e o `mapa-servicos.js` monta os marcadores a partir
+desses itens. Não existe segunda consulta, segundo filtro nem segunda ordenação: mapa e
+lista são o mesmo resultado desenhado de dois jeitos, e não há como divergirem.
+
+O Leaflet é servido pelo próprio site (`src/public/vendor/leaflet`, versão 1.9.4), e não
+por CDN. O motivo é o `Content-Security-Policy` do helmet, que traz `script-src 'self'`:
+aceitar script de CDN exigiria abrir essa diretiva para um domínio de terceiro. Servindo
+local, a única abertura necessária é `img-src` para `https://*.tile.openstreetmap.org`,
+de onde vêm os ladrilhos. Nenhum script de terceiro executa na plataforma.
+
+O mapa é melhoria progressiva: se o Leaflet não carregar, ou se os ladrilhos falharem
+(testado com o domínio do OpenStreetMap bloqueado), o mapa se esconde, um aviso em
+`role="status"` explica o que houve e a listagem permanece completa.
+
+A atribuição ao OpenStreetMap aparece duas vezes de propósito: no controle do Leaflet,
+exigido pela licença ODbL, e em parágrafo estático no HTML, que sobrevive à falha do
+mapa. Um teste garante que a menção não seja removida por descuido.
 
 ### Nota sobre o nome do bairro (RF28)
 

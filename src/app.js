@@ -19,7 +19,16 @@ if (process.env.NODE_ENV === 'production') {
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
-app.use(helmet());
+// O padrao do helmet e' mantido de proposito — inclusive script-src 'self', que
+// e' o que impede script de terceiro na pagina. A unica abertura e' img-src para
+// os ladrilhos do OpenStreetMap, que o mapa de /servicos busca no dominio deles
+// (RF29). O Leaflet em si e' servido por nos, de src/public/vendor.
+const diretivasCsp = {
+    ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+    'img-src': ["'self'", 'data:', 'https://*.tile.openstreetmap.org'],
+};
+
+app.use(helmet({ contentSecurityPolicy: { directives: diretivasCsp } }));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));

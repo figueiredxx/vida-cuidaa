@@ -96,7 +96,9 @@ function copiarDiretorio(origem, destino) {
 }
 
 function copiarAssets() {
-    for (const pasta of ['css', 'js', 'fonts']) {
+    // vendor entra por causa do Leaflet: a pagina de servicos pede o arquivo mesmo
+    // na vitrine estatica, onde o mapa fica sem marcador por falta de servidor.
+    for (const pasta of ['css', 'js', 'fonts', 'vendor']) {
         const origem = path.join(DIR_PUBLIC, pasta);
         if (fs.existsSync(origem)) {
             copiarDiretorio(origem, path.join(DIR_SAIDA, pasta));

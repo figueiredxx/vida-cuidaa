@@ -2,6 +2,9 @@
 <html lang="pt-BR">
 <head>
 <%- include('../partials/head') %>
+<%# Leaflet servido pelo proprio site: o CSP de script e' 'self', e assim
+    continua sendo — nenhum script de terceiro executa nesta pagina. %>
+<link rel="stylesheet" href="/vendor/leaflet/leaflet.css">
 </head>
 <body>
 <%- include('../partials/header') %>
@@ -77,6 +80,48 @@
         <p class="servicos__status" id="status-localizacao" role="status" aria-live="polite"></p>
     </section>
 
+    <%# RF29: o mapa so existe quando ha o que mostrar nele. %>
+    <% if (unidades && unidades.length > 0) { %>
+        <section class="servicos__mapa-secao" aria-labelledby="titulo-mapa">
+            <h2 id="titulo-mapa">Mapa das unidades</h2>
+
+            <p class="servicos__mapa-aviso">
+                O mapa é um complemento visual. <strong>A lista abaixo traz as mesmas
+                unidades</strong>, com todos os dados, e continua funcionando se o mapa
+                não carregar.
+            </p>
+
+            <%# Sem role="img": o Leaflet cria dentro do mapa controles que recebem
+                foco, e role="img" esconderia esses controles do leitor de tela sem
+                tirar o foco deles. A secao ja e' rotulada pelo h2, e o paragrafo
+                acima avisa que a lista traz o mesmo conteudo. %>
+            <div id="mapa-servicos"
+                 class="servicos__mapa"
+                 data-origem-lat="<%= latitude === null ? '' : latitude %>"
+                 data-origem-lon="<%= longitude === null ? '' : longitude %>"></div>
+
+            <p class="servicos__mapa-indisponivel" id="mapa-indisponivel" role="status" hidden>
+                Não foi possível carregar o mapa &mdash; ele depende de conexão com a
+                internet. A lista de unidades abaixo continua completa.
+            </p>
+
+            <p class="servicos__mapa-legenda">
+                <span class="servicos__mapa-chave servicos__mapa-chave--sus"></span>
+                Atende pelo SUS
+                <span class="servicos__mapa-chave servicos__mapa-chave--particular"></span>
+                Não atende pelo SUS (marcador com borda tracejada)
+            </p>
+
+            <%# Atribuicao exigida pela licenca do OpenStreetMap. O Leaflet tambem a
+                insere no canto do mapa; esta fica no HTML para existir mesmo quando o
+                mapa nao carrega. %>
+            <p class="servicos__mapa-credito">
+                Mapa: &copy; colaboradores do <a href="https://www.openstreetmap.org/copyright"
+                target="_blank" rel="noopener">OpenStreetMap</a>, sob licença ODbL.
+            </p>
+        </section>
+    <% } %>
+
     <section aria-labelledby="titulo-resultado" id="resultado-servicos" tabindex="-1">
         <h2 id="titulo-resultado">
             <% if (bairro) { %>Unidades em <%= bairro %><% } else { %>Unidades encontradas<% } %>
@@ -112,7 +157,17 @@
 
             <ol class="servicos-lista">
                 <% unidades.forEach(function(unidade) { %>
-                    <li class="servicos-lista__item <%= unidade.atende_sus ? '' : 'servicos-lista__item--particular' %>">
+                    <%# Os data-* alimentam o mapa. Virem daqui, e nao de um JSON a
+                        parte, garante que marcador e item da lista nunca divirjam. %>
+                    <li class="servicos-lista__item <%= unidade.atende_sus ? '' : 'servicos-lista__item--particular' %>"
+                        data-lat="<%= unidade.latitude %>"
+                        data-lon="<%= unidade.longitude %>"
+                        data-nome="<%= unidade.nome %>"
+                        data-sus="<%= unidade.atende_sus ? 1 : 0 %>"
+                        data-tipo="<%= unidade.tipo_descricao || '' %>"
+                        data-endereco="<%= unidade.logradouro || '' %><%= unidade.numero ? ', ' + unidade.numero : '' %>"
+                        data-bairro="<%= unidade.bairro_normalizado || unidade.bairro || '' %>"
+                        data-telefone="<%= unidade.telefone || '' %>">
                         <h3 class="servicos-lista__nome"><%= unidade.nome %></h3>
 
                         <% if (unidade.distancia_km !== undefined) { %>
@@ -176,5 +231,7 @@
 <%- include('../partials/footer') %>
 <script src="/js/acessibilidade.js"></script>
 <script src="/js/servicos.js"></script>
+<script src="/vendor/leaflet/leaflet.js"></script>
+<script src="/js/mapa-servicos.js"></script>
 </body>
 </html>
