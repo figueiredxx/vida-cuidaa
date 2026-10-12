@@ -1,6 +1,6 @@
-// Cobre a carga das unidades de saude do CNES no banco. A importacao precisa ser
-// idempotente: rodar de novo depois de uma extracao nova tem que substituir a
-// lista, nunca duplicar as unidades.
+// Cobre a carga das unidades de saude do CNES no banco e os filtros do RF27
+// (tipo de unidade e atendimento pelo SUS). A importacao precisa ser idempotente:
+// rodar de novo depois de uma extracao nova substitui a lista, nunca duplica.
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const { prepararBancoTemporario } = require('./ajuda/banco-teste');
@@ -19,6 +19,7 @@ function unidade(alteracoes = {}) {
         latitude: -3.0589,
         longitude: -59.9512,
         tipo_unidade: 2,
+        tipo_descricao: 'CENTRO DE SAUDE/UNIDADE BASICA',
         atende_sus: 1,
         turno_atendimento: 'ATENDIMENTO NOS TURNOS MANHA E TARDE',
         ...alteracoes,
@@ -33,6 +34,7 @@ test('substituirTodas grava as unidades recebidas', () => {
     assert.equal(gravadas[0].nome, 'UBS SAO JOSE');
     assert.equal(gravadas[0].bairro, 'SAO JOSE OPERARIO');
     assert.equal(gravadas[0].latitude, -3.0589);
+    assert.equal(gravadas[0].tipo_descricao, 'CENTRO DE SAUDE/UNIDADE BASICA');
     assert.equal(gravadas[1].nome, 'UBS CENTRO');
 });
 
@@ -61,17 +63,90 @@ test('contar devolve o total de unidades carregadas', () => {
     assert.equal(unidadeSaudeRepository.contar(), 2);
 });
 
-test('listarQueAtendemSus devolve so as unidades que atendem pelo SUS', () => {
+test('listarComFiltros sem filtro devolve todas as unidades', () => {
+    unidadeSaudeRepository.substituirTodas([
+        unidade({ codigo_cnes: '2000156', atende_sus: 1 }),
+        unidade({ codigo_cnes: '2000157', atende_sus: 0 }),
+    ]);
+
+    assert.equal(unidadeSaudeRepository.listarComFiltros({}).length, 2);
+});
+
+// RN20 manda exibir quem nao atende pelo SUS com marcacao distinta, nao esconder.
+// Por isso o filtro e' opcional: quem decide e' quem chama.
+test('listarComFiltros com apenasSus devolve so quem atende pelo SUS', () => {
     unidadeSaudeRepository.substituirTodas([
         unidade({ codigo_cnes: '2000156', nome: 'UBS', atende_sus: 1 }),
         unidade({ codigo_cnes: '2000157', nome: 'CLINICA PARTICULAR', atende_sus: 0 }),
     ]);
 
-    const doSus = unidadeSaudeRepository.listarQueAtendemSus();
+    const doSus = unidadeSaudeRepository.listarComFiltros({ apenasSus: true });
 
     assert.deepEqual(
         doSus.map((u) => u.nome),
         ['UBS']
     );
-    assert.ok(doSus.every((u) => typeof u.latitude === 'number' && typeof u.longitude === 'number'));
+});
+
+test('listarComFiltros com tipo devolve so as unidades daquele tipo', () => {
+    unidadeSaudeRepository.substituirTodas([
+        unidade({ codigo_cnes: '2000156', nome: 'POSTO', tipo_unidade: 1 }),
+        unidade({ codigo_cnes: '2000157', nome: 'HOSPITAL', tipo_unidade: 5 }),
+    ]);
+
+    const postos = unidadeSaudeRepository.listarComFiltros({ tipo: 1 });
+
+    assert.deepEqual(
+        postos.map((u) => u.nome),
+        ['POSTO']
+    );
+});
+
+test('listarComFiltros combina tipo e atendimento pelo SUS', () => {
+    unidadeSaudeRepository.substituirTodas([
+        unidade({ codigo_cnes: '2000156', nome: 'POSTO DO SUS', tipo_unidade: 1, atende_sus: 1 }),
+        unidade({ codigo_cnes: '2000157', nome: 'POSTO PARTICULAR', tipo_unidade: 1, atende_sus: 0 }),
+        unidade({ codigo_cnes: '2000158', nome: 'HOSPITAL DO SUS', tipo_unidade: 5, atende_sus: 1 }),
+    ]);
+
+    const achadas = unidadeSaudeRepository.listarComFiltros({ tipo: 1, apenasSus: true });
+
+    assert.deepEqual(
+        achadas.map((u) => u.nome),
+        ['POSTO DO SUS']
+    );
+});
+
+test('listarTiposDisponiveis devolve os tipos presentes, sem repetir, em ordem alfabetica', () => {
+    unidadeSaudeRepository.substituirTodas([
+        unidade({ codigo_cnes: '2000156', tipo_unidade: 5, tipo_descricao: 'HOSPITAL GERAL' }),
+        unidade({ codigo_cnes: '2000157', tipo_unidade: 1, tipo_descricao: 'POSTO DE SAUDE' }),
+        unidade({ codigo_cnes: '2000158', tipo_unidade: 5, tipo_descricao: 'HOSPITAL GERAL' }),
+    ]);
+
+    assert.deepEqual(unidadeSaudeRepository.listarTiposDisponiveis(), [
+        { codigo: 5, descricao: 'HOSPITAL GERAL' },
+        { codigo: 1, descricao: 'POSTO DE SAUDE' },
+    ]);
+});
+
+// RN22: a base precisa registrar a data da extracao, que e' exibida ao usuario.
+test('registrarExtracao guarda a data e buscarDataExtracao devolve ela', () => {
+    unidadeSaudeRepository.registrarExtracao('2026-10-12');
+
+    assert.equal(unidadeSaudeRepository.buscarDataExtracao(), '2026-10-12');
+});
+
+test('registrarExtracao substitui a data anterior em vez de acumular', () => {
+    unidadeSaudeRepository.registrarExtracao('2026-10-12');
+    unidadeSaudeRepository.registrarExtracao('2026-11-20');
+
+    assert.equal(unidadeSaudeRepository.buscarDataExtracao(), '2026-11-20');
+    assert.equal(db.prepare('SELECT COUNT(*) AS total FROM extracao_cnes').get().total, 1);
+});
+
+test('buscarDataExtracao devolve null quando nenhuma extracao foi registrada', () => {
+    db.prepare('DELETE FROM extracao_cnes').run();
+
+    assert.equal(unidadeSaudeRepository.buscarDataExtracao(), null);
 });

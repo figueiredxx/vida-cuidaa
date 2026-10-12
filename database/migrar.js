@@ -58,15 +58,45 @@ function criarTabelaUnidadeSaude() {
             latitude REAL NOT NULL,
             longitude REAL NOT NULL,
             tipo_unidade INTEGER NOT NULL,
+            tipo_descricao TEXT,
             atende_sus INTEGER NOT NULL DEFAULT 0,
             turno_atendimento TEXT
         )
     `);
     db.exec('CREATE INDEX IF NOT EXISTS idx_unidade_saude_bairro ON unidade_saude(bairro)');
+    db.exec('CREATE INDEX IF NOT EXISTS idx_unidade_saude_tipo ON unidade_saude(tipo_unidade)');
     console.log('unidade_saude criada.');
+}
+
+// Descricao oficial do tipo de unidade, usada no filtro do RF27. Vem do endpoint
+// /cnes/tipounidades, porque a listagem de estabelecimentos so traz o codigo.
+function adicionarTipoDescricaoEmUnidadeSaude() {
+    if (!tabelaExiste('unidade_saude') || colunaExiste('unidade_saude', 'tipo_descricao')) {
+        console.log('unidade_saude.tipo_descricao ja existe - nada a fazer.');
+        return;
+    }
+    db.exec('ALTER TABLE unidade_saude ADD COLUMN tipo_descricao TEXT');
+    console.log('unidade_saude.tipo_descricao adicionada.');
+}
+
+// RN22: a data da extracao da base precisa ser registrada e exibida ao usuario.
+function criarTabelaExtracaoCnes() {
+    if (tabelaExiste('extracao_cnes')) {
+        console.log('extracao_cnes ja existe - nada a fazer.');
+        return;
+    }
+    db.exec(`
+        CREATE TABLE extracao_cnes (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            data_extracao TEXT NOT NULL
+        )
+    `);
+    console.log('extracao_cnes criada.');
 }
 
 adicionarConteudoIdEmQuestao();
 criarTabelaUnidadeSaude();
+adicionarTipoDescricaoEmUnidadeSaude();
+criarTabelaExtracaoCnes();
 db.close();
 console.log('Migracoes concluidas.');

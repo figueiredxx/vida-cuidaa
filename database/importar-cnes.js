@@ -22,7 +22,10 @@ if (!fs.existsSync(ARQUIVO)) {
 
 const unidadeSaudeRepository = require('../src/repositories/unidade-saude.repository');
 
-const unidades = JSON.parse(fs.readFileSync(ARQUIVO, 'utf8'));
-unidadeSaudeRepository.substituirTodas(unidades);
+const { extraido_em: extraidoEm, unidades } = JSON.parse(fs.readFileSync(ARQUIVO, 'utf8'));
 
-console.log(`${unidadeSaudeRepository.contar()} unidades de saude importadas.`);
+unidadeSaudeRepository.substituirTodas(unidades);
+// RN22: a data da extracao acompanha a base e e' exibida na pagina de servicos.
+unidadeSaudeRepository.registrarExtracao(extraidoEm);
+
+console.log(`${unidadeSaudeRepository.contar()} unidades de saude importadas (base extraida em ${extraidoEm}).`);

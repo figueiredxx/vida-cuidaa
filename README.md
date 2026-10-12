@@ -67,10 +67,11 @@ antes de ativar produção, senão o cookie de sessão não é enviado pelo nave
 
 ## Unidades de saúde (CNES)
 
-A lista de unidades de saúde de Manaus vem da API de dados abertos do Ministério
-da Saúde (CNES). A coleta **não acontece em tempo de execução**: o site lê a tabela
-`unidade_saude` do próprio banco, para não depender de a API externa estar no ar
-durante a apresentação.
+A página `/servicos` lista unidades de saúde de Manaus ordenadas pela distância até
+quem acessa, com filtro por tipo de unidade e por atendimento pelo SUS. Os dados vêm
+da API de dados abertos do Ministério da Saúde (CNES). A coleta **não acontece em
+tempo de execução**: o site lê a tabela `unidade_saude` do próprio banco, para não
+depender de a API externa estar no ar durante a apresentação.
 
 ```bash
 npm run extrair:cnes    # consulta a API e grava database/cnes-manaus.json
@@ -87,7 +88,11 @@ Detalhes da API, levantados na marra porque a documentação é escassa:
 - Manaus é o código IBGE `130260`
 - `limit` tem teto de 20 — paginar por `offset` é obrigatório (~87 requisições)
 - Dos 1.735 estabelecimentos ativos, 659 são de tipos que atendem ao público e
-  todos têm coordenada
+  todos têm coordenada; 284 atendem pelo SUS
+- A listagem traz só o **código** do tipo de unidade; a descrição oficial vem do
+  endpoint `/cnes/tipounidades`
+- A distância é calculada por Haversine, **em linha reta** — não é distância de
+  percurso, e a página diz isso em cada item (RN21)
 
 ## Quadro do Trello
 

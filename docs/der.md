@@ -12,7 +12,7 @@ Notação de cardinalidade do Mermaid:
 | `\|o` | zero ou um |
 | `o{` | zero ou muitos |
 
-O banco tem **onze tabelas**. Todas as chaves primárias são `INTEGER PRIMARY KEY
+O banco tem **doze tabelas**. Todas as chaves primárias são `INTEGER PRIMARY KEY
 AUTOINCREMENT` (o `rowid` do SQLite).
 
 ```mermaid
@@ -123,8 +123,14 @@ erDiagram
         REAL latitude
         REAL longitude
         INTEGER tipo_unidade "codigo do tipo no CNES"
+        TEXT tipo_descricao "descricao oficial do tipo, de /cnes/tipounidades"
         INTEGER atende_sus "0 ou 1"
         TEXT turno_atendimento
+    }
+
+    EXTRACAO_CNES {
+        INTEGER id PK
+        TEXT data_extracao "RN22 - exibida ao usuario em /servicos"
     }
 ```
 
@@ -151,6 +157,9 @@ Estas não são esquecimento de modelagem; são requisitos:
   apenas do lado da resposta, para saber qual administrador respondeu.
 - **`glossario` é uma tabela isolada, sem relacionamento.** É um verbete independente,
   sem ligação com categoria ou conteúdo — simplicidade deliberada.
+- **`extracao_cnes` guarda uma linha só, sem relacionamento.** Registra a data da
+  extração da base (RN22). Não se liga a `unidade_saude` porque a base é substituída
+  inteira a cada importação: a data vale para a carga toda, não para cada unidade.
 - **`unidade_saude` também é isolada.** É um espelho local de uma base pública externa
   (o CNES, do Ministério da Saúde), recarregado inteiro a cada importação
   (`npm run importar:cnes`). Ligá-la a `categoria` ou `conteudo` criaria uma dependência

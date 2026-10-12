@@ -38,8 +38,12 @@ test('ehUtil recusa estabelecimento sem coordenada', () => {
     assert.equal(ehUtil(bruto({ longitude_estabelecimento_decimo_grau: null })), false);
 });
 
+// A listagem de estabelecimentos so traz o codigo do tipo; a descricao oficial
+// vem do endpoint /cnes/tipounidades e entra aqui como tabela de apoio.
+const DESCRICOES = { 2: 'CENTRO DE SAUDE/UNIDADE BASICA' };
+
 test('normalizar traduz os campos da API para o formato gravado no banco', () => {
-    assert.deepEqual(normalizar(bruto()), {
+    assert.deepEqual(normalizar(bruto(), DESCRICOES), {
         codigo_cnes: '2000156',
         nome: 'UBS SAO JOSE',
         logradouro: 'AVENIDA AUTAZ MIRIM',
@@ -49,17 +53,25 @@ test('normalizar traduz os campos da API para o formato gravado no banco', () =>
         latitude: -3.0589,
         longitude: -59.9512,
         tipo_unidade: 2,
+        tipo_descricao: 'CENTRO DE SAUDE/UNIDADE BASICA',
         atende_sus: 1,
         turno_atendimento: 'ATENDIMENTO NOS TURNOS MANHA E TARDE',
     });
 });
 
 test('normalizar usa a razao social quando o nome fantasia vem vazio', () => {
-    assert.equal(normalizar(bruto({ nome_fantasia: null })).nome, 'PREFEITURA MUNICIPAL DE MANAUS');
+    assert.equal(normalizar(bruto({ nome_fantasia: null }), DESCRICOES).nome, 'PREFEITURA MUNICIPAL DE MANAUS');
+});
+
+test('normalizar deixa a descricao do tipo nula quando o codigo nao esta na tabela', () => {
+    assert.equal(normalizar(bruto({ codigo_tipo_unidade: 5 }), DESCRICOES).tipo_descricao, null);
 });
 
 test('normalizar marca atende_sus como 0 quando o estabelecimento nao atende pelo SUS', () => {
-    assert.equal(normalizar(bruto({ estabelecimento_faz_atendimento_ambulatorial_sus: 'NAO' })).atende_sus, 0);
+    assert.equal(
+        normalizar(bruto({ estabelecimento_faz_atendimento_ambulatorial_sus: 'NAO' }), DESCRICOES).atende_sus,
+        0
+    );
 });
 
 // A API nao informa o total de registros, entao a unica forma de saber que acabou

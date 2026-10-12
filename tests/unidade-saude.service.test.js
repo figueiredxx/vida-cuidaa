@@ -14,7 +14,7 @@ const CENTRO = { latitude: -3.13, longitude: -60.023 };
 
 let contador = 0;
 
-function unidade(latitude, longitude, nome, atendeSus = 1) {
+function unidade(latitude, longitude, nome, atendeSus = 1, tipo = 2) {
     contador += 1;
     return {
         codigo_cnes: String(2000000 + contador),
@@ -25,7 +25,8 @@ function unidade(latitude, longitude, nome, atendeSus = 1) {
         telefone: '9232154000',
         latitude,
         longitude,
-        tipo_unidade: 2,
+        tipo_unidade: tipo,
+        tipo_descricao: 'CENTRO DE SAUDE/UNIDADE BASICA',
         atende_sus: atendeSus,
         turno_atendimento: 'MANHA E TARDE',
     };
@@ -101,10 +102,10 @@ test('buscarProximas devolve null quando a coordenada nao vem', () => {
     assert.equal(unidadeSaudeService.buscarProximas({ latitude: 'perto daqui', longitude: -60 }), null);
 });
 
-// A plataforma e' educativa e fala o tempo todo de servico gratuito (UBS, CTA,
-// testagem pelo SUS). Indicar clinica particular como "unidade mais proxima"
-// contradiz o conteudo, entao a busca so considera quem atende pelo SUS.
-test('buscarProximas ignora unidade que nao atende pelo SUS', () => {
+// A plataforma fala o tempo todo de servico gratuito, entao o padrao e' mostrar
+// so quem atende pelo SUS. Mas e' padrao, nao corte: a RN20 manda exibir os
+// particulares com marcacao distinta, e o RF27 exige o filtro.
+test('buscarProximas ignora, por padrao, quem nao atende pelo SUS', () => {
     unidadeSaudeRepository.substituirTodas([
         unidade(CENTRO.latitude + 0.001, CENTRO.longitude, 'Clinica particular ao lado', 0),
         unidade(CENTRO.latitude + 0.2, CENTRO.longitude, 'UBS mais longe', 1),
@@ -122,4 +123,67 @@ test('buscarProximas devolve lista vazia quando nao ha unidade carregada', () =>
     unidadeSaudeRepository.substituirTodas([]);
 
     assert.deepEqual(unidadeSaudeService.buscarProximas(CENTRO), []);
+});
+
+test('buscarProximas com apenasSus false inclui quem nao atende pelo SUS', () => {
+    unidadeSaudeRepository.substituirTodas([
+        unidade(CENTRO.latitude + 0.001, CENTRO.longitude, 'Clinica particular ao lado', 0),
+        unidade(CENTRO.latitude + 0.2, CENTRO.longitude, 'UBS mais longe', 1),
+    ]);
+
+    const proximas = unidadeSaudeService.buscarProximas({ ...CENTRO, apenasSus: false });
+
+    assert.deepEqual(
+        proximas.map((u) => u.nome),
+        ['Clinica particular ao lado', 'UBS mais longe']
+    );
+});
+
+// RF27: filtrar por tipo de unidade.
+test('buscarProximas filtra por tipo de unidade', () => {
+    unidadeSaudeRepository.substituirTodas([
+        unidade(CENTRO.latitude + 0.01, CENTRO.longitude, 'Posto', 1, 1),
+        unidade(CENTRO.latitude + 0.02, CENTRO.longitude, 'Hospital', 1, 5),
+    ]);
+
+    const proximas = unidadeSaudeService.buscarProximas({ ...CENTRO, tipo: 5 });
+
+    assert.deepEqual(
+        proximas.map((u) => u.nome),
+        ['Hospital']
+    );
+});
+
+// A coordenada chega pela query string, ou seja, como texto. Number('') e' zero,
+// e zero e' coordenada valida: sem este tratamento, /servicos?lat=&lon= listaria
+// as unidades "mais proximas" do Golfo da Guine.
+test('converterCoordenada transforma texto numerico em numero', () => {
+    assert.equal(unidadeSaudeService.converterCoordenada('-3.1302'), -3.1302);
+    assert.equal(unidadeSaudeService.converterCoordenada('0'), 0);
+});
+
+test('converterCoordenada devolve null para texto vazio, e nao zero', () => {
+    assert.equal(unidadeSaudeService.converterCoordenada(''), null);
+    assert.equal(unidadeSaudeService.converterCoordenada('   '), null);
+    assert.equal(unidadeSaudeService.converterCoordenada(undefined), null);
+});
+
+test('converterCoordenada devolve null para texto que nao e numero', () => {
+    assert.equal(unidadeSaudeService.converterCoordenada('perto daqui'), null);
+    assert.equal(unidadeSaudeService.converterCoordenada('-3,1302'), null);
+});
+
+// RN22: a data da extracao e' exibida ao usuario na pagina.
+test('buscarDataExtracao devolve a data registrada na importacao', () => {
+    unidadeSaudeRepository.registrarExtracao('2026-10-12');
+
+    assert.equal(unidadeSaudeService.buscarDataExtracao(), '2026-10-12');
+});
+
+test('listarTiposDisponiveis entrega os tipos para o filtro da pagina', () => {
+    unidadeSaudeRepository.substituirTodas([unidade(CENTRO.latitude, CENTRO.longitude, 'UBS', 1, 2)]);
+
+    assert.deepEqual(unidadeSaudeService.listarTiposDisponiveis(), [
+        { codigo: 2, descricao: 'CENTRO DE SAUDE/UNIDADE BASICA' },
+    ]);
 });

@@ -108,8 +108,14 @@ CREATE TABLE IF NOT EXISTS unidade_saude (
     latitude REAL NOT NULL,
     longitude REAL NOT NULL,
     tipo_unidade INTEGER NOT NULL,
+    tipo_descricao TEXT,
     atende_sus INTEGER NOT NULL DEFAULT 0,
     turno_atendimento TEXT
+);
+
+CREATE TABLE IF NOT EXISTS extracao_cnes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    data_extracao TEXT NOT NULL
 );
 
 CREATE INDEX IF NOT EXISTS idx_conteudo_categoria_publicado ON conteudo(categoria_id, publicado);
@@ -119,3 +125,4 @@ CREATE INDEX IF NOT EXISTS idx_alternativa_questao ON alternativa(questao_id);
 CREATE INDEX IF NOT EXISTS idx_questao_conteudo ON questao(conteudo_id);
 CREATE INDEX IF NOT EXISTS idx_duvida_status ON duvida(status);
 CREATE INDEX IF NOT EXISTS idx_unidade_saude_bairro ON unidade_saude(bairro);
+CREATE INDEX IF NOT EXISTS idx_unidade_saude_tipo ON unidade_saude(tipo_unidade);

@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<%- include('../partials/head') %>
+</head>
+<body>
+<%- include('../partials/header') %>
+
+<main id="conteudo-principal" class="container">
+    <h1>Serviços de saúde perto de você</h1>
+
+    <p class="servicos__intro">
+        Esta página lista estabelecimentos de saúde de Manaus cadastrados no
+        Cadastro Nacional de Estabelecimentos de Saúde (CNES), do Ministério da Saúde,
+        ordenados pela distância até onde você estiver.
+    </p>
+
+    <% if (erro) { %>
+        <p class="servicos__erro" role="alert"><%= erro %></p>
+    <% } %>
+
+    <section class="servicos__busca" aria-labelledby="titulo-busca">
+        <h2 id="titulo-busca">Encontrar unidades</h2>
+
+        <form method="GET" action="/servicos" class="filtros" id="form-servicos">
+            <%# A coordenada obtida pelo navegador viaja nestes campos ocultos, para
+                a lista continuar sendo montada no servidor e a URL ficar compartilhavel. %>
+            <input type="hidden" name="lat" id="campo-lat" value="<%= latitude === null ? '' : latitude %>">
+            <input type="hidden" name="lon" id="campo-lon" value="<%= longitude === null ? '' : longitude %>">
+
+            <div class="filtros__campo">
+                <label for="tipo">Tipo de unidade</label>
+                <select id="tipo" name="tipo">
+                    <option value="">Todos os tipos</option>
+                    <% tipos.forEach(function(t) { %>
+                        <option value="<%= t.codigo %>" <%= String(tipo) === String(t.codigo) ? 'selected' : '' %>>
+                            <%= t.descricao %>
+                        </option>
+                    <% }); %>
+                </select>
+            </div>
+
+            <div class="filtros__campo filtros__campo--checkbox">
+                <%# O valor 'nao' so e' enviado quando a pessoa desmarca a opcao,
+                    porque checkbox desmarcada nao vai no formulario. %>
+                <input type="checkbox" id="sus" name="sus" value="nao" <%= apenasSus ? '' : 'checked' %>>
+                <label for="sus">Mostrar também unidades que não atendem pelo SUS</label>
+            </div>
+
+            <button type="submit" class="botao-primario">Aplicar filtros</button>
+        </form>
+
+        <p class="servicos__acoes">
+            <button type="button" class="botao-primario" id="botao-localizacao">
+                Usar minha localização
+            </button>
+        </p>
+
+        <p class="servicos__aviso-permissao">
+            O navegador vai pedir permissão para acessar sua localização. Ela é usada
+            apenas para calcular as distâncias e não fica guardada em lugar nenhum.
+        </p>
+
+        <p class="servicos__status" id="status-localizacao" role="status" aria-live="polite"></p>
+    </section>
+
+    <section aria-labelledby="titulo-resultado" id="resultado-servicos" tabindex="-1">
+        <h2 id="titulo-resultado">Unidades encontradas</h2>
+
+        <% if (unidades === null) { %>
+            <p class="estado-vazio">
+                Use o botão acima para buscar as unidades mais próximas. Se preferir não
+                compartilhar sua localização, em breve será possível buscar por bairro.
+            </p>
+        <% } else if (unidades.length === 0) { %>
+            <p class="estado-vazio">
+                Nenhuma unidade encontrada com os filtros escolhidos. Tente outro tipo de
+                unidade ou marque a opção de mostrar unidades que não atendem pelo SUS.
+            </p>
+        <% } else { %>
+            <p class="servicos__linha-reta">
+                As distâncias são medidas <strong>em linha reta</strong>, não pelo caminho
+                a percorrer. Em Manaus, igarapés e o traçado das ruas costumam tornar o
+                percurso real bem maior do que o número mostrado aqui.
+            </p>
+
+            <ol class="servicos-lista">
+                <% unidades.forEach(function(unidade) { %>
+                    <li class="servicos-lista__item <%= unidade.atende_sus ? '' : 'servicos-lista__item--particular' %>">
+                        <h3 class="servicos-lista__nome"><%= unidade.nome %></h3>
+
+                        <p class="servicos-lista__distancia">
+                            <%= unidade.distancia_km.toFixed(1).replace('.', ',') %> km em linha reta
+                        </p>
+
+                        <% if (unidade.atende_sus) { %>
+                            <p class="servicos-lista__selo servicos-lista__selo--sus">Atende pelo SUS</p>
+                        <% } else { %>
+                            <p class="servicos-lista__selo servicos-lista__selo--particular">Não atende pelo SUS</p>
+                        <% } %>
+
+                        <% if (unidade.tipo_descricao) { %>
+                            <p class="servicos-lista__tipo"><%= unidade.tipo_descricao %></p>
+                        <% } %>
+
+                        <p class="servicos-lista__endereco">
+                            <%= unidade.logradouro %><%= unidade.numero ? ', ' + unidade.numero : '' %>
+                            <% if (unidade.bairro) { %> &mdash; <%= unidade.bairro %><% } %>
+                        </p>
+
+                        <% if (unidade.telefone) { %>
+                            <p class="servicos-lista__telefone">
+                                Telefone:
+                                <a href="tel:<%= unidade.telefone.replace(/\D/g, '') %>"><%= unidade.telefone %></a>
+                            </p>
+                        <% } %>
+
+                        <% if (unidade.turno_atendimento) { %>
+                            <p class="servicos-lista__turno"><%= unidade.turno_atendimento %></p>
+                        <% } %>
+
+                        <%# RF30: abrir a rota em aplicativo de mapas externo. %>
+                        <p>
+                            <a class="servicos-lista__rota"
+                               href="https://www.google.com/maps/dir/?api=1&amp;destination=<%= unidade.latitude %>,<%= unidade.longitude %>"
+                               target="_blank" rel="noopener">
+                                Ver rota até <%= unidade.nome %> (abre em nova aba)
+                            </a>
+                        </p>
+                    </li>
+                <% }); %>
+            </ol>
+        <% } %>
+    </section>
+
+    <% if (dataExtracao) { %>
+        <p class="servicos__fonte">
+            Fonte: Cadastro Nacional de Estabelecimentos de Saúde (CNES), Ministério da Saúde.
+            Dados extraídos em <%= dataExtracao.split('-').reverse().join('/') %>.
+            As informações podem ter mudado desde a extração &mdash; confirme por telefone antes de se deslocar.
+        </p>
+    <% } %>
+</main>
+
+<%- include('../partials/footer') %>
+<script src="/js/acessibilidade.js"></script>
+<script src="/js/servicos.js"></script>
+</body>
+</html>

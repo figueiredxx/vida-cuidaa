@@ -12,7 +12,13 @@
 const fs = require('fs');
 const path = require('path');
 
-const API = 'https://apidadosabertos.saude.gov.br/cnes/estabelecimentos';
+const API_BASE = 'https://apidadosabertos.saude.gov.br';
+const API = API_BASE + '/cnes/estabelecimentos';
+
+// A listagem de estabelecimentos devolve so o codigo do tipo de unidade. A
+// descricao oficial vem deste outro endpoint, e e' o que a pagina exibe e filtra
+// (RF26 e RF27) — melhor que inventar nome para codigo.
+const API_TIPOS = API_BASE + '/cnes/tipounidades';
 
 // Manaus no codigo do IBGE.
 const MUNICIPIO = '130260';
@@ -40,7 +46,9 @@ function ehUtil(bruto) {
     return latitude !== null && latitude !== undefined && longitude !== null && longitude !== undefined;
 }
 
-function normalizar(bruto) {
+function normalizar(bruto, descricoesPorTipo = {}) {
+    const tipo = Number(bruto.codigo_tipo_unidade);
+
     return {
         codigo_cnes: String(bruto.codigo_cnes),
         // Boa parte dos estabelecimentos publicos nao preenche o nome fantasia.
@@ -51,7 +59,8 @@ function normalizar(bruto) {
         telefone: bruto.numero_telefone_estabelecimento,
         latitude: bruto.latitude_estabelecimento_decimo_grau,
         longitude: bruto.longitude_estabelecimento_decimo_grau,
-        tipo_unidade: Number(bruto.codigo_tipo_unidade),
+        tipo_unidade: tipo,
+        tipo_descricao: descricoesPorTipo[tipo] || null,
         atende_sus: bruto.estabelecimento_faz_atendimento_ambulatorial_sus === 'SIM' ? 1 : 0,
         turno_atendimento: bruto.descricao_turno_atendimento,
     };
@@ -101,7 +110,38 @@ async function buscarPaginaDaApi(offset) {
     throw new Error(`Falha ao buscar o offset ${offset}: ${ultimoErro.message}`);
 }
 
+// Percorre a tabela de tipos e guarda so os que interessam.
+async function buscarDescricoesDeTipo() {
+    const descricoes = {};
+
+    for (let offset = 0; offset < 500; offset += LIMITE_POR_PAGINA) {
+        const url = new URL(API_TIPOS);
+        url.searchParams.set('limit', String(LIMITE_POR_PAGINA));
+        url.searchParams.set('offset', String(offset));
+
+        const resposta = await fetch(url);
+        if (!resposta.ok) throw new Error(`a tabela de tipos respondeu ${resposta.status}`);
+
+        const corpo = await resposta.json();
+        const lista = corpo.tipos_unidade || [];
+        if (!lista.length) break;
+
+        lista.forEach((t) => {
+            const codigo = Number(t.codigo_tipo_unidade);
+            if (TIPOS_UTEIS.includes(codigo)) descricoes[codigo] = t.descricao_tipo_unidade;
+        });
+
+        await esperar(PAUSA_ENTRE_PAGINAS_MS);
+    }
+
+    return descricoes;
+}
+
 async function extrair() {
+    console.log('Buscando a tabela oficial de tipos de unidade...');
+    const descricoesPorTipo = await buscarDescricoesDeTipo();
+    console.log(`${Object.keys(descricoesPorTipo).length} tipos uteis descritos.`);
+
     console.log(`Buscando estabelecimentos de Manaus (IBGE ${MUNICIPIO})...`);
 
     const brutos = await coletarPaginas({
@@ -116,8 +156,12 @@ async function extrair() {
 
     console.log(`\n${brutos.length} estabelecimentos ativos encontrados.`);
 
-    const unidades = brutos.filter(ehUtil).map(normalizar);
-    fs.writeFileSync(ARQUIVO_SAIDA, JSON.stringify(unidades, null, 2) + '\n', 'utf8');
+    const unidades = brutos.filter(ehUtil).map((b) => normalizar(b, descricoesPorTipo));
+
+    // RN22: a base precisa registrar a data da propria extracao, que a pagina
+    // de servicos exibe ao usuario.
+    const conteudo = { extraido_em: new Date().toISOString().slice(0, 10), unidades };
+    fs.writeFileSync(ARQUIVO_SAIDA, JSON.stringify(conteudo, null, 2) + '\n', 'utf8');
 
     const tamanhoKb = Math.round(fs.statSync(ARQUIVO_SAIDA).size / 1024);
     console.log(`${unidades.length} unidades uteis gravadas em ${path.relative(process.cwd(), ARQUIVO_SAIDA)} (${tamanhoKb} KB).`);
