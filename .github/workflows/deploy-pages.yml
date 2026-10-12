@@ -40,6 +40,9 @@ jobs:
       - name: Popular banco de dados de build (dados de exemplo, descartados após o job)
         run: npm run seed
 
+      - name: Carregar a base do CNES (JSON versionado, sem chamar a API)
+        run: npm run importar:cnes
+
       - name: Gerar vitrine estática
         run: npm run build:estatico
 
