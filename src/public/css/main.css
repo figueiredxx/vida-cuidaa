@@ -877,6 +877,18 @@ select:focus-visible {
     border-top: 1px solid var(--cor-borda);
 }
 
+/* RF04: o canal oficial fica um pouco mais destacado que o aviso, porque e' o
+   unico elemento do rodape em que alguem pode precisar agir. */
+.site-footer__canal {
+    margin-top: 0.5rem;
+    color: var(--cor-texto);
+}
+
+.site-footer__canal a {
+    font-weight: 600;
+    white-space: nowrap;
+}
+
 /* ---------- Trilha por categoria ---------- */
 
 .migalhas {

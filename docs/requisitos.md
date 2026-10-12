@@ -21,7 +21,7 @@ as da especificação; as colunas de implementação e verificação são deste 
 | RF01 | Listar as categorias de conteúdo educativo disponíveis | Sprint 7 (`c1cd49c`) | `categoria.controller.js#listar` → `categoria.service.js`; `views/site/categorias.ejs` | Acessar `/categorias` |
 | RF02 | Filtrar artigos por faixa etária: adolescente, adulto ou todas as idades | Sprint 2 (`8bee005`) | `conteudo.repository.js#montarFiltros` (`faixa_etaria`) | `/conteudos?faixa=adolescente` |
 | RF03 | Exibir o artigo completo contendo título, texto, fonte oficial e data de revisão | Sprint 2 (`8bee005`), Sprint 6 (`7f83038`) | `conteudo.controller.js#detalhe`, `conteudo.service.js#buscarDetalhe`; `schema.sql` (`fontes TEXT NOT NULL`) | `/conteudos/:slug` de um conteúdo publicado |
-| RF04 | Exibir aviso de finalidade educativa e canal oficial de orientação em todas as telas de conteúdo | Sprint 6 (`54370ba`) — **parcial** | `views/partials/footer.ejs`, incluído em todo layout; também no build estático (`build-estatico.js#injetarAvisoEstatico`) | Rodapé de qualquer página. **Falta a indicação de canal oficial de orientação** — hoje o rodapé traz só o aviso de finalidade educativa |
+| RF04 | Exibir aviso de finalidade educativa e canal oficial de orientação em todas as telas de conteúdo | Sprint 6 (`54370ba`), Sprint 8 | `views/partials/footer.ejs`, incluído em todo layout: aviso de finalidade educativa e Disque Saúde 136, com link `tel:` | Rodapé de qualquer página. Ver `tests/rodape.view.test.js` |
 | RF05 | Permitir busca textual por palavra-chave no acervo de artigos | Sprint 2 (`8bee005`) | `conteudo.repository.js#montarFiltros` (parâmetro `busca`, com `LIKE` em prepared statement) | `/conteudos?q=camisinha`. **O documento formal lista este requisito como não implementado; está desatualizado** |
 | RF06 | Disponibilizar glossário de termos técnicos em linguagem acessível | Sprint 5 (`5cb8ddc`) | `glossario.controller.js`, `glossario.service.js` | `/glossario?letra=A` |
 
@@ -211,9 +211,6 @@ e é o que sustenta os RF24 a RF30.
 - **Requisitos funcionais ainda não implementados:** RF13 (explicação por alternativa),
   RF16 (apagar o histórico de leitura), RF19 (relato de erro em conteúdo) e RF33 a RF35
   (teclas de atalho, mapa do sítio e página de acessibilidade, exigidos pelo e-MAG).
-- **RF04 está parcial:** o rodapé traz o aviso de finalidade educativa em todas as telas,
-  mas não indica canal oficial de orientação. Resolver é acrescentar uma linha ao
-  `footer.ejs` — falta decidir qual canal citar.
 - **RF11 diverge do código:** o requisito diz que o artigo é concluído ao submeter o
   questionário; o sistema o marca como lido ao abrir o artigo. Ou o código muda, ou o
   requisito muda, mas os dois não podem continuar como estão.
