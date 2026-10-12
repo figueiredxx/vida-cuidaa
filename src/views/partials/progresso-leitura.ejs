@@ -1,0 +1,29 @@
+<%# Indicador de progresso de leitura (RF14) e apagamento do historico (RF16).
+    O historico vive so no localStorage, nunca no servidor (RN10), entao este
+    bloco nasce vazio e e' preenchido pelo progresso-leitura.js.
+
+    Locals:
+      total          - quantidade de conteudos publicados
+      conteudoAtual  - slug do artigo aberto, quando a pagina for a de um artigo
+      permitirApagar - exibe o controle do RF16 (so na listagem) %>
+<div class="progresso-leitura" id="progresso-leitura" data-total="<%= total %>"
+     <% if (conteudoAtual) { %>data-conteudo-atual="<%= conteudoAtual %>"<% } %>>
+    <p class="progresso-leitura__texto" id="progresso-leitura-texto">Carregando seu progresso de leitura&hellip;</p>
+
+    <div class="progresso-leitura__arco" id="progresso-leitura-barra" role="progressbar"
+         aria-labelledby="progresso-leitura-texto" aria-valuemin="0" aria-valuemax="<%= total %>" aria-valuenow="0">
+        <span class="progresso-leitura__preenchimento" id="progresso-leitura-preenchimento" style="width: 0%"></span>
+    </div>
+
+    <% if (permitirApagar) { %>
+        <%# Nasce escondido: so faz sentido oferecer o apagamento a quem tem o que
+            apagar, e sem JavaScript o botao nao teria o que fazer. %>
+        <p class="progresso-leitura__acoes">
+            <button type="button" class="botao-secundario" id="apagar-historico" hidden>
+                Apagar meu histórico de leitura
+            </button>
+        </p>
+    <% } %>
+
+    <p class="progresso-leitura__aviso" id="progresso-leitura-aviso" role="status" aria-live="polite"></p>
+</div>

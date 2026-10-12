@@ -9,13 +9,7 @@
 <main id="conteudo-principal" class="container">
     <h1>Conteúdos</h1>
 
-    <div class="progresso-leitura" id="progresso-leitura" data-total="<%= totalPublicados %>">
-        <p class="progresso-leitura__texto" id="progresso-leitura-texto">Carregando seu progresso de leitura&hellip;</p>
-        <div class="progresso-leitura__arco" id="progresso-leitura-barra" role="progressbar"
-             aria-labelledby="progresso-leitura-texto" aria-valuemin="0" aria-valuemax="<%= totalPublicados %>" aria-valuenow="0">
-            <span class="progresso-leitura__preenchimento" id="progresso-leitura-preenchimento" style="width: 0%"></span>
-        </div>
-    </div>
+    <%- include('../partials/progresso-leitura', { total: totalPublicados, conteudoAtual: null, permitirApagar: true }) %>
 
     <form method="GET" action="/conteudos" class="filtros" role="search">
         <div class="filtros__campo">

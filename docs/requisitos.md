@@ -47,7 +47,7 @@ com link para o conteúdo (`questao.conteudo_id`, `quiz.repository.js#buscarGaba
 |---|---|---|---|---|
 | RF14 | Exibir indicador de progresso de leitura, informando a quantidade de conteúdos lidos em relação ao total | Sprint 6/7 (`54370ba`, `c1cd49c`) | `public/js/progresso-leitura.js#atualizarBarra`, `views/site/categoria.ejs` | Ler um artigo e voltar a `/categorias/:slug` — "Você já leu X de Y conteúdos" |
 | RF15 | Identificar visualmente, nas listagens, os conteúdos já lidos pelo usuário | Sprint 6/7 (`54370ba`, `c1cd49c`) | `public/js/progresso-leitura.js#marcarCardsLidos` (`.badge-lido`) | O selo "lido" aparece no card do artigo já aberto |
-| RF16 | Permitir ao usuário apagar integralmente o histórico de leitura do armazenamento local | **Não implementado** | A chave `progresso-leitura-lidos` do `localStorage` é escrita e lida, mas não há controle na interface para apagá-la | — |
+| RF16 | Permitir ao usuário apagar integralmente o histórico de leitura do armazenamento local | Sprint 8 | `views/partials/progresso-leitura.ejs` (botão, exibido só a quem tem histórico), `public/js/progresso-leitura.js#apagarHistorico` (`localStorage.removeItem`, não lista vazia) | Ler um artigo, abrir `/conteudos` e clicar em "Apagar meu histórico de leitura". Ver `tests/progresso-leitura.view.test.js` |
 
 A trilha por categoria (Sprint 7, `c1cd49c`) apoia-se nestes dois requisitos: os artigos
 publicados da categoria aparecem em ordem de leitura e o quiz só é liberado depois que
@@ -209,8 +209,8 @@ e é o que sustenta os RF24 a RF30.
 ## Gaps conhecidos (a decidir com a banca/orientadora)
 
 - **Requisitos funcionais ainda não implementados:** RF13 (explicação por alternativa),
-  RF16 (apagar o histórico de leitura), RF19 (relato de erro em conteúdo) e RF33 a RF35
-  (teclas de atalho, mapa do sítio e página de acessibilidade, exigidos pelo e-MAG).
+  RF19 (relato de erro em conteúdo) e RF33 a RF35 (teclas de atalho, mapa do sítio e
+  página de acessibilidade, exigidos pelo e-MAG).
 - **RF11 diverge do código:** o requisito diz que o artigo é concluído ao submeter o
   questionário; o sistema o marca como lido ao abrir o artigo. Ou o código muda, ou o
   requisito muda, mas os dois não podem continuar como estão.

@@ -328,6 +328,24 @@ select:focus-visible {
     background: #0e211d;
 }
 
+/* Acao secundaria: mesma forma do botao primario, peso visual menor. Usado em
+   acao destrutiva (apagar o historico de leitura, RF16), que nao deve competir
+   com a acao principal da tela. */
+.botao-secundario {
+    align-self: flex-start;
+    padding: 0.65rem 1.4rem;
+    background: transparent;
+    color: var(--cor-tinta);
+    border: 2px solid var(--cor-tinta);
+    border-radius: var(--raio-pill);
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+.botao-secundario:hover {
+    background: var(--cor-papel);
+}
+
 .erros {
     color: var(--cor-erro);
     font-weight: 600;
@@ -887,6 +905,16 @@ select:focus-visible {
 .site-footer__canal a {
     font-weight: 600;
     white-space: nowrap;
+}
+
+/* RF16: apagar o historico de leitura. */
+.progresso-leitura__acoes {
+    margin-top: 0.75rem;
+}
+
+.progresso-leitura__aviso:not(:empty) {
+    margin-top: 0.5rem;
+    font-weight: 600;
 }
 
 /* ---------- Trilha por categoria ---------- */

@@ -17,13 +17,7 @@
         Revisado em <%= new Date(conteudo.atualizado_em).toLocaleDateString('pt-BR') %>
     </p>
 
-    <div class="progresso-leitura" id="progresso-leitura" data-total="<%= totalPublicados %>" data-conteudo-atual="<%= conteudo.slug %>">
-        <p class="progresso-leitura__texto" id="progresso-leitura-texto">Carregando seu progresso de leitura&hellip;</p>
-        <div class="progresso-leitura__arco" id="progresso-leitura-barra" role="progressbar"
-             aria-labelledby="progresso-leitura-texto" aria-valuemin="0" aria-valuemax="<%= totalPublicados %>" aria-valuenow="0">
-            <span class="progresso-leitura__preenchimento" id="progresso-leitura-preenchimento" style="width: 0%"></span>
-        </div>
-    </div>
+    <%- include('../partials/progresso-leitura', { total: totalPublicados, conteudoAtual: conteudo.slug, permitirApagar: false }) %>
 
     <article><%- conteudo.corpo_html %></article>
 

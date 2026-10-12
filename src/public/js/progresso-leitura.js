@@ -27,6 +27,17 @@
         return lidos;
     }
 
+    // RF16. Apaga a chave inteira, em vez de gravar lista vazia: o requisito fala
+    // em apagar do armazenamento local, e deixar a chave para tras contraria isso.
+    function apagarHistorico() {
+        try {
+            localStorage.removeItem(CHAVE_LIDOS);
+            return true;
+        } catch (erro) {
+            return false;
+        }
+    }
+
     function atualizarBarra(container, lidos) {
         var total = parseInt(container.getAttribute('data-total'), 10) || 0;
         var texto = document.getElementById('progresso-leitura-texto');
@@ -44,6 +55,13 @@
         if (preenchimento) {
             preenchimento.style.width = percentual + '%';
         }
+    }
+
+    function esconderSelosDeLido() {
+        var selos = document.querySelectorAll('.badge-lido');
+        Array.prototype.forEach.call(selos, function (selo) {
+            selo.hidden = true;
+        });
     }
 
     function marcarCardsLidos(lidos) {
@@ -70,5 +88,35 @@
 
         atualizarBarra(container, lidos);
         marcarCardsLidos(lidos);
+
+        var botaoApagar = document.getElementById('apagar-historico');
+        var aviso = document.getElementById('progresso-leitura-aviso');
+        if (!botaoApagar) return;
+
+        // So aparece para quem tem o que apagar. Botao que nao faz nada confunde,
+        // e quem nunca leu nada nao precisa dele.
+        botaoApagar.hidden = lidos.length === 0;
+
+        botaoApagar.addEventListener('click', function () {
+            var quantidade = lidos.length;
+            var pergunta =
+                'Apagar o histórico de ' +
+                quantidade +
+                (quantidade === 1 ? ' conteúdo lido' : ' conteúdos lidos') +
+                '? Esta ação não pode ser desfeita.';
+
+            if (!window.confirm(pergunta)) return;
+
+            if (!apagarHistorico()) {
+                if (aviso) aviso.textContent = 'Não foi possível apagar o histórico neste navegador.';
+                return;
+            }
+
+            lidos = [];
+            atualizarBarra(container, lidos);
+            esconderSelosDeLido();
+            botaoApagar.hidden = true;
+            if (aviso) aviso.textContent = 'Histórico de leitura apagado deste navegador.';
+        });
     });
 })();
