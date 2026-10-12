@@ -35,8 +35,14 @@ function substituirTodas(unidades) {
     trocar(unidades);
 }
 
+// Só o que atende pelo SUS. O CNES traz tambem clinica particular, que nao cabe
+// numa plataforma publica que fala de servico gratuito.
+function listarQueAtendemSus() {
+    return db.prepare('SELECT * FROM unidade_saude WHERE atende_sus = 1 ORDER BY nome').all();
+}
+
 function contar() {
     return db.prepare('SELECT COUNT(*) AS total FROM unidade_saude').get().total;
 }
 
-module.exports = { substituirTodas, contar };
+module.exports = { substituirTodas, listarQueAtendemSus, contar };

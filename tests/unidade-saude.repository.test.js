@@ -60,3 +60,18 @@ test('contar devolve o total de unidades carregadas', () => {
 
     assert.equal(unidadeSaudeRepository.contar(), 2);
 });
+
+test('listarQueAtendemSus devolve so as unidades que atendem pelo SUS', () => {
+    unidadeSaudeRepository.substituirTodas([
+        unidade({ codigo_cnes: '2000156', nome: 'UBS', atende_sus: 1 }),
+        unidade({ codigo_cnes: '2000157', nome: 'CLINICA PARTICULAR', atende_sus: 0 }),
+    ]);
+
+    const doSus = unidadeSaudeRepository.listarQueAtendemSus();
+
+    assert.deepEqual(
+        doSus.map((u) => u.nome),
+        ['UBS']
+    );
+    assert.ok(doSus.every((u) => typeof u.latitude === 'number' && typeof u.longitude === 'number'));
+});
